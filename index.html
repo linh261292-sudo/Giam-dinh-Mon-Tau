@@ -1,0 +1,1602 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Kiểm soát mớn nước</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap">
+<style>
+/* Layout: navy rail 264px bên trái + vùng làm việc; tóm tắt trước, chi tiết sau */
+:root{
+  --navy:#0A2A4A; --navy-2:#0F3860; --blue:#0083C7; --green:#00B050;
+  --bg:#F1F5F9; --surface:#FFFFFF; --surface-2:#F6F9FC; --ink:#0B1F33; --muted:#566A80; --line:#D7E1EB;
+  --ok:#00A04A; --ok-bg:#E3F6EB; --warn:#B87900; --warn-bg:#FFF4D9; --bad:#C9302C; --bad-bg:#FDE7E6;
+  --blue-bg:#E2F1FA; --focus:#0083C7; --shadow:0 1px 2px rgba(10,42,74,.06),0 6px 20px rgba(10,42,74,.06);
+  --in-bg:#FFF0F5; --in-line:#EFA3C3; --in-line-2:#D9578E; --sel-bg:#E7F4FC; --sel-line:#86C4E8; --lock-bg:#E9EEF3; --lock-line:#CBD6E1; --lock-ink:#1B3550; --lock-ic:#7C8EA2;
+  --rail-ink:#E8F1F9; --rail-muted:#9DB4CB;
+  --f-display:"Sora",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --fs-xs:clamp(11px,.68rem + .1vw,12px); --fs-sm:clamp(12.5px,.76rem + .12vw,13.5px); --fs-md:clamp(14px,.86rem + .12vw,15px);
+  --fs-lg:clamp(17px,1rem + .35vw,20px); --fs-xl:clamp(22px,1.2rem + 1vw,30px); --fs-kpi:clamp(24px,1.1rem + 1.4vw,34px);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#06182B; --surface:#0C2339; --surface-2:#0A1E33; --ink:#E4EDF6; --muted:#93A9C0; --line:#1D3A58;
+  --blue:#2FA6E6; --ok:#2BD27A; --ok-bg:#0E3527; --warn:#F2B53A; --warn-bg:#3A2D0E; --bad:#FF6B63; --bad-bg:#3E1716;
+  --blue-bg:#0D3150; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); --in-bg:#2E1524; --in-line:#8A4566; --in-line-2:#E0709F; --sel-bg:#0C2E4B; --sel-line:#2C6F9C; --lock-bg:#08192B; --lock-line:#1A3552; --lock-ink:#CFE0F0; --lock-ic:#6F87A0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#06182B; --surface:#0C2339; --surface-2:#0A1E33; --ink:#E4EDF6; --muted:#93A9C0; --line:#1D3A58;
+  --blue:#2FA6E6; --ok:#2BD27A; --ok-bg:#0E3527; --warn:#F2B53A; --warn-bg:#3A2D0E; --bad:#FF6B63; --bad-bg:#3E1716;
+  --blue-bg:#0D3150; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); --in-bg:#2E1524; --in-line:#8A4566; --in-line-2:#E0709F; --sel-bg:#0C2E4B; --sel-line:#2C6F9C; --lock-bg:#08192B; --lock-line:#1A3552; --lock-ink:#CFE0F0; --lock-ic:#6F87A0; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:var(--fs-md);line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.num,td,input.n{font-variant-numeric:tabular-nums}
+
+/* ---------- Rail ---------- */
+.app{display:grid;grid-template-columns:264px minmax(0,1fr);min-height:100%}
+.rail{position:sticky;top:0;height:100vh;height:100dvh;background:var(--navy);color:var(--rail-ink);display:flex;flex-direction:column;overflow:hidden;
+  padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:18px;padding-block:calc(22px + env(safe-area-inset-top,0px)) 18px}
+.rail::before{content:"";position:absolute;width:340px;height:340px;border-radius:50%;left:-120px;bottom:-140px;
+  background:radial-gradient(circle,rgba(0,131,199,.45),transparent 65%);filter:blur(10px);animation:drift 18s ease-in-out infinite alternate;pointer-events:none}
+.rail::after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;right:-110px;top:30%;
+  background:radial-gradient(circle,rgba(0,176,80,.28),transparent 65%);filter:blur(8px);animation:drift 24s ease-in-out infinite alternate-reverse;pointer-events:none}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(30px,-40px) scale(1.12)}}
+.brand{position:relative;display:flex;gap:12px;align-items:center;margin-bottom:26px}
+.brand svg{flex:none}
+.brand b{display:block;font-family:var(--f-display);font-size:16px;letter-spacing:-.01em;line-height:1.2}
+.brand small{color:var(--rail-muted);font-size:var(--fs-xs);letter-spacing:.06em;text-transform:uppercase}
+.nav{position:relative;display:flex;flex-direction:column;gap:2px}
+.nav button{all:unset;cursor:pointer;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:var(--rail-muted);font-weight:500;font-size:var(--fs-md);transition:background .2s,color .2s}
+.nav button:hover{background:rgba(255,255,255,.06);color:var(--rail-ink)}
+.nav button[aria-current="page"]{background:rgba(0,131,199,.22);color:#fff;box-shadow:inset 3px 0 0 var(--green)}
+.nav button:focus-visible{outline:2px solid #6CC3F0}
+.nav svg{width:18px;height:18px;flex:none}
+.rail-foot{position:relative;margin-top:auto;display:grid;gap:10px}
+.rail-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px}
+.rail-card .k{font-size:var(--fs-xs);color:var(--rail-muted);text-transform:uppercase;letter-spacing:.06em}
+.rail-card .v{font-family:var(--f-display);font-size:20px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+.rail-card .s{font-size:var(--fs-xs);color:var(--rail-muted)}
+.theme-btn{all:unset;cursor:pointer;font-size:var(--fs-xs);color:var(--rail-muted);padding:6px 2px}
+.theme-btn:hover{color:#fff}
+
+/* ---------- Main ---------- */
+main{min-width:0;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1240px;margin:0 auto;display:grid;gap:20px}
+.view{display:grid;gap:20px;min-width:0}
+.head{display:flex;flex-wrap:wrap;gap:14px 20px;align-items:flex-end;justify-content:space-between}
+.head h1{font-size:var(--fs-xl);font-weight:700}
+.head p{margin:4px 0 0;color:var(--muted);max-width:70ch}
+.eyebrow{font-size:var(--fs-xs);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--blue)}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 14px;border-radius:10px;cursor:pointer;font-weight:600;font-size:var(--fs-sm);transition:border-color .15s,background .15s,transform .1s}
+.btn:hover{border-color:var(--blue)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover{background:#0072AE}
+.btn.green{background:var(--green);border-color:var(--green);color:#fff}
+.btn.ghost{background:transparent}
+.btn.sm{padding:6px 10px;font-size:var(--fs-xs)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn svg{width:16px;height:16px}
+
+.seg{display:inline-flex;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.seg button{all:unset;cursor:pointer;padding:8px 14px;border-radius:9px;font-weight:600;font-size:var(--fs-sm);color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff}
+:root[data-theme="dark"] .seg button[aria-pressed="true"]{background:var(--blue)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .seg button[aria-pressed="true"]{background:var(--blue)}}
+.seg button:focus-visible{outline:2px solid var(--focus)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow);min-width:0}
+.card > h2{font-size:var(--fs-lg);font-weight:600;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.card > h2 .tag{font-family:var(--f-body)}
+.card-sub{color:var(--muted);font-size:var(--fs-sm);margin:2px 0 14px}
+details.card > summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px}
+details.card > summary::-webkit-details-marker{display:none}
+details.card > summary h2{font-size:var(--fs-lg);font-weight:600}
+details.card > summary .chev{transition:transform .2s;color:var(--muted)}
+details.card[open] > summary .chev{transform:rotate(180deg)}
+details.card[open] > summary{margin-bottom:14px}
+
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px 14px}
+.field{display:grid;gap:4px;min-width:0}
+.field label{font-size:var(--fs-xs);font-weight:600;color:var(--muted);letter-spacing:.02em}
+.field label i{font-style:normal;font-weight:400;opacity:.8}
+
+
+.field.check{display:flex;align-items:center;gap:8px;padding-top:18px}
+.field.check input{width:18px;height:18px;min-height:0}
+.field.check label{font-size:var(--fs-sm);color:var(--ink);font-weight:500}
+
+
+.drafts{display:grid;grid-template-columns:auto repeat(2,minmax(0,1fr)) minmax(0,1.05fr);gap:8px 10px;align-items:center}
+/* ===== Quy ước ô: HỒNG = nhập · XANH = chọn · XÁM KHÓA = tự tính ===== */
+.field input:not([type=checkbox]),.field textarea,.drafts input,.liq input{width:100%;background:var(--in-bg);border:1.5px solid var(--in-line);border-radius:9px;padding:8px 10px;min-height:38px;color:var(--ink);transition:border-color .15s,box-shadow .15s}
+.field input:not([type=checkbox]):hover,.field textarea:hover,.drafts input:hover,.liq input:hover{border-color:var(--in-line-2)}
+.field input:not([type=checkbox]):focus,.field textarea:focus,.drafts input:focus,.liq input:focus{outline:none;border-color:var(--in-line-2);box-shadow:0 0 0 3px color-mix(in srgb,var(--in-line-2) 25%,transparent)}
+.field input:not([type=checkbox]):placeholder-shown:not(.opt),.drafts input:placeholder-shown,.field textarea:placeholder-shown:not(.opt){border-style:dashed;border-color:var(--in-line-2)}
+.field input::placeholder,.drafts input::placeholder,.liq input::placeholder,.field textarea::placeholder{color:color-mix(in srgb,var(--muted) 75%,transparent);font-weight:400}
+.field select,.liq select{width:100%;appearance:none;-webkit-appearance:none;background:var(--sel-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230083C7' stroke-width='2.6'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") right 10px center/13px no-repeat;border:1.5px solid var(--sel-line);border-radius:9px;padding:8px 30px 8px 10px;min-height:38px;cursor:pointer;font-weight:500;color:var(--ink)}
+.field select:hover,.liq select:hover{border-color:var(--blue)}
+.field select:focus,.liq select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 22%,transparent)}
+.field.check input{accent-color:var(--blue)}
+.field.check{background:var(--sel-bg);border:1.5px solid var(--sel-line);border-radius:9px;padding:8px 10px;align-self:end;min-height:38px}
+.drafts input{text-align:center;font-family:var(--f-display);font-weight:600;font-size:16px;padding:8px;min-height:40px}
+.liq input,.liq select{padding:6px 7px;min-height:34px;min-width:0;border-radius:7px}
+.liq select{padding-right:24px;background-position:right 6px center;background-size:11px}
+input.from-ai{background:var(--warn-bg)!important;border:1.5px dotted var(--warn)!important}
+.lock{display:flex;align-items:center;gap:6px;min-height:38px;padding:7px 10px;border-radius:9px;background:var(--lock-bg);border:1.5px solid var(--lock-line);color:var(--lock-ink);font-weight:700;font-variant-numeric:tabular-nums;cursor:default;min-width:0;white-space:nowrap;overflow:hidden}
+.lock::before{content:"";width:12px;height:12px;flex:none;background:var(--lock-ic);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 11V8a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1zm2 0h6V8a3 3 0 0 0-6 0z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 11V8a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1zm2 0h6V8a3 3 0 0 0-6 0z'/%3E%3C/svg%3E") center/contain no-repeat}
+.lock .val{margin-left:auto}
+.lock .u{font-weight:500;color:var(--muted);font-size:11px}
+.lock.key{background:var(--navy);border-color:var(--navy);color:#fff}
+.lock.key::before{background:#7FA6C9}
+.lock.key .u{color:#A9C4DD}
+.lock.sm{min-height:34px;padding:5px 8px;border-radius:7px;font-size:var(--fs-sm)}
+.lock.c{justify-content:center;font-family:var(--f-display)}
+.lock.c .val{margin:0 auto}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-size:var(--fs-sm)}
+.legend > b{font-family:var(--f-display);font-size:var(--fs-xs);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend span em{font-style:normal;color:var(--muted)}
+.sw{display:inline-block;width:30px;height:20px;border-radius:6px;flex:none}
+.sw.in{background:var(--in-bg);border:1.5px solid var(--in-line)}
+.sw.sel{background:var(--sel-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230083C7' stroke-width='2.6'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") right 4px center/9px no-repeat;border:1.5px solid var(--sel-line)}
+.sw.lk{background:var(--lock-bg);border:1.5px solid var(--lock-line);position:relative}
+.sw.lk::after{content:"";position:absolute;inset:0;margin:auto;width:10px;height:10px;background:var(--lock-ic);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 11V8a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1zm2 0h6V8a3 3 0 0 0-6 0z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 11V8a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1zm2 0h6V8a3 3 0 0 0-6 0z'/%3E%3C/svg%3E") center/contain no-repeat}
+.sw.ai{background:var(--warn-bg);border:1.5px dotted var(--warn)}
+.sw.req{background:var(--in-bg);border:1.5px dashed var(--in-line-2)}
+.hydro{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.1fr);gap:6px 10px;align-items:center}
+.hydro .hd{font-size:var(--fs-xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.hydro .lb{font-size:var(--fs-sm);font-weight:600}
+.hydro .lb small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+.hydro input{width:100%;background:var(--in-bg);border:1.5px solid var(--in-line);border-radius:7px;padding:6px 8px;min-height:34px}
+.hydro input:focus{outline:none;border-color:var(--in-line-2)}
+.res{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+
+.drafts .hd{font-size:var(--fs-xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:center}
+.drafts .rl{font-weight:600;font-size:var(--fs-sm)}
+
+
+.sv-card{display:grid;gap:16px;align-content:start}
+.sv-card h2 .when{font-family:var(--f-body);font-size:var(--fs-xs);font-weight:600;padding:3px 8px;border-radius:99px;background:var(--blue-bg);color:var(--blue);text-transform:uppercase;letter-spacing:.06em}
+.sub-h{font-size:var(--fs-xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:flex;justify-content:space-between;align-items:center;gap:8px}
+
+.liq{width:100%;border-collapse:collapse;font-size:var(--fs-sm)}
+.liq th{font-size:var(--fs-xs);color:var(--muted);text-align:left;font-weight:600;padding:4px 4px}
+.liq td{padding:3px 4px}
+
+.liq td.m{text-align:right;font-weight:600;white-space:nowrap}
+.liq .x{all:unset;cursor:pointer;color:var(--muted);padding:4px 6px;border-radius:6px}
+.liq .x:hover{color:var(--bad)}
+.liq-wrap{overflow-x:auto}
+
+textarea.tbl{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:12.5px;min-height:150px;resize:vertical;white-space:pre;line-height:1.45}
+.tbl-status{font-size:var(--fs-xs);color:var(--muted)}
+.tbl-status b{color:var(--ink)}
+
+/* ---------- Summary ---------- */
+.summary{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:20px;align-items:stretch}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.kpi{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--surface-2);display:grid;gap:2px;align-content:start}
+.kpi .k{font-size:var(--fs-xs);color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.kpi .v{font-family:var(--f-display);font-size:var(--fs-kpi);font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.kpi .v small{font-size:.5em;font-weight:600;color:var(--muted);margin-left:4px;letter-spacing:0}
+.kpi .s{font-size:var(--fs-xs);color:var(--muted)}
+.kpi.hero{background:var(--navy);border-color:var(--navy);color:#fff}
+.kpi.hero .k,.kpi.hero .s,.kpi.hero .v small{color:#A9C4DD}
+.verdict{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:14px;border:1px solid}
+.verdict.ok{background:var(--ok-bg);border-color:color-mix(in srgb,var(--ok) 35%,transparent)}
+.verdict.warn{background:var(--warn-bg);border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
+.verdict.bad{background:var(--bad-bg);border-color:color-mix(in srgb,var(--bad) 35%,transparent)}
+.verdict.na{background:var(--surface-2);border-color:var(--line)}
+.verdict .ic{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-family:var(--f-display)}
+.verdict.ok .ic{background:var(--ok)} .verdict.warn .ic{background:var(--warn)} .verdict.bad .ic{background:var(--bad)} .verdict.na .ic{background:var(--muted)}
+.verdict b{display:block;font-family:var(--f-display);font-size:var(--fs-lg)}
+.verdict p{margin:2px 0 0;font-size:var(--fs-sm);color:var(--ink);opacity:.85}
+.checks{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.checks li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;font-size:var(--fs-sm)}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-xs);font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap;letter-spacing:.02em}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.warn{background:var(--warn-bg);color:var(--warn)} .pill.bad{background:var(--bad-bg);color:var(--bad)} .pill.info{background:var(--blue-bg);color:var(--blue)} .pill.na{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.ruler-box{border:1px solid var(--line);border-radius:14px;background:var(--surface-2);padding:10px 8px;display:grid;gap:4px}
+.ruler-box .k{font-size:var(--fs-xs);color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding-left:6px}
+.ruler-box svg{width:100%;height:auto;display:block}
+.reveal{animation:rise .5s cubic-bezier(.2,.7,.2,1) both}
+@keyframes rise{from{transform:translateY(8px);opacity:.4}to{transform:none;opacity:1}}
+
+/* ---------- Steps table ---------- */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table.steps{width:100%;border-collapse:collapse;font-size:var(--fs-sm);min-width:640px}
+table.steps th,table.steps td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+table.steps th:first-child,table.steps td:first-child{text-align:left;white-space:normal;min-width:190px}
+table.steps td.f{text-align:left;color:var(--muted);font-size:var(--fs-xs);white-space:normal;min-width:150px}
+table.steps thead th{position:sticky;top:0;background:var(--surface-2);font-size:var(--fs-xs);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+table.steps thead tr:first-child th.col{color:var(--ink);font-family:var(--f-display);text-transform:none;font-size:var(--fs-sm);letter-spacing:0;text-align:center;border-left:1px solid var(--line)}
+table.steps td.c0{border-left:1px solid var(--line)}
+table.steps tr.g td{background:var(--surface-2);font-family:var(--f-display);font-weight:600;color:var(--blue);font-size:var(--fs-xs);text-transform:uppercase;letter-spacing:.08em;text-align:left;padding-top:10px}
+table.steps tr.key td{font-weight:700;background:color-mix(in srgb,var(--blue) 7%,transparent)}
+table.steps td.v{font-weight:600}
+table.steps td .src{display:block;font-size:10.5px;color:var(--muted);font-weight:500}
+table.steps td.st-ok{color:var(--ok)} table.steps td.st-warn{color:var(--warn);background:var(--warn-bg)} table.steps td.st-bad{color:var(--bad);background:var(--bad-bg);font-weight:700}
+table.steps tr.root td:first-child{box-shadow:inset 3px 0 0 var(--bad)}
+.rootflag{display:inline-block;margin-left:6px;font-size:10px;font-weight:700;color:#fff;background:var(--bad);padding:1px 6px;border-radius:5px;vertical-align:middle}
+
+/* ---------- Check view ---------- */
+.drop{border:2px dashed color-mix(in srgb,var(--blue) 45%,var(--line));border-radius:16px;background:color-mix(in srgb,var(--blue) 5%,var(--surface));padding:26px 18px;text-align:center;display:grid;gap:10px;justify-items:center;transition:background .2s,border-color .2s}
+.drop.over{background:color-mix(in srgb,var(--blue) 14%,var(--surface));border-color:var(--blue)}
+.drop svg{width:42px;height:42px;color:var(--blue)}
+.drop b{font-family:var(--f-display);font-size:var(--fs-lg)}
+.drop p{margin:0;color:var(--muted);font-size:var(--fs-sm);max-width:60ch}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.thumb{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--surface-2);aspect-ratio:3/4;max-width:100%}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{position:absolute;top:6px;right:6px;border:0;border-radius:99px;width:26px;height:26px;background:rgba(10,42,74,.8);color:#fff;cursor:pointer;font-weight:700}
+.thumb span{position:absolute;left:6px;bottom:6px;font-size:10.5px;background:rgba(10,42,74,.8);color:#fff;padding:1px 6px;border-radius:5px}
+.status{display:flex;align-items:center;gap:12px;font-size:var(--fs-sm);padding:12px 14px;border-radius:12px;background:var(--blue-bg);color:var(--ink)}
+.spin{width:18px;height:18px;border-radius:50%;border:2.5px solid color-mix(in srgb,var(--blue) 25%,transparent);border-top-color:var(--blue);animation:sp 0.8s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+.issue-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.issue-list li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);font-size:var(--fs-sm)}
+.issue-list .vals{font-variant-numeric:tabular-nums;text-align:right;font-size:var(--fs-xs);color:var(--muted)}
+.issue-list .vals b{color:var(--ink);font-size:var(--fs-sm)}
+.note{font-size:var(--fs-sm);color:var(--muted);margin:0}
+.callout{display:flex;gap:12px;padding:12px 14px;border-radius:12px;background:var(--blue-bg);font-size:var(--fs-sm);align-items:flex-start}
+.callout.warn{background:var(--warn-bg)}
+.callout svg{flex:none;width:18px;height:18px;color:var(--blue);margin-top:2px}
+
+/* ---------- Lists ---------- */
+table.list{width:100%;border-collapse:collapse;font-size:var(--fs-sm);min-width:720px}
+table.list th,table.list td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left}
+table.list th{font-size:var(--fs-xs);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;background:var(--surface-2)}
+table.list td.r,table.list th.r{text-align:right}
+.empty{padding:28px;text-align:center;color:var(--muted);display:grid;gap:6px;justify-items:center}
+.empty b{color:var(--ink);font-family:var(--f-display)}
+
+/* ---------- Guide ---------- */
+.guide{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.guide .card h3{font-size:var(--fs-md);margin-bottom:8px}
+.guide ol,.guide ul{margin:0;padding-left:20px;display:grid;gap:4px;font-size:var(--fs-sm)}
+.fx{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:2px 6px;white-space:nowrap}
+.band{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.band div{border-radius:12px;padding:12px;font-size:var(--fs-sm)}
+.band b{display:block;font-family:var(--f-display);font-size:var(--fs-lg)}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:var(--fs-sm);opacity:0;pointer-events:none;transition:all .25s;z-index:50;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translateX(-50%)}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1080px){.grid2{grid-template-columns:minmax(0,1fr)}.summary{grid-template-columns:minmax(0,1fr)}.ruler-box{max-width:420px}}
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .rail{position:sticky;top:0;height:auto;z-index:20;flex-direction:row;align-items:center;gap:12px;padding-block:calc(10px + env(safe-area-inset-top,0px)) 10px;
+    padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+  .rail::before,.rail::after,.rail-foot,.brand div{display:none}
+  .brand{margin:0}
+  .nav{flex-direction:row;overflow-x:auto;scrollbar-width:none}
+  .nav button{padding:8px 10px;white-space:nowrap;font-size:var(--fs-sm)}
+  .nav button[aria-current="page"]{box-shadow:inset 0 -3px 0 var(--green)}
+  main{padding-block:18px 48px}
+  .band{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail" aria-label="Điều hướng">
+    <div class="brand">
+      <svg width="38" height="38" viewBox="0 0 38 38" aria-hidden="true"><rect width="38" height="38" rx="10" fill="#0083C7"/><g fill="#fff"><rect x="9" y="8" width="3" height="22" rx="1"/><rect x="14" y="10" width="7" height="3" rx="1"/><rect x="14" y="18" width="5" height="3" rx="1"/><rect x="14" y="26" width="7" height="3" rx="1"/></g><path d="M4 23c4 0 4-2 8-2s4 2 8 2 4-2 8-2 4 2 6 2v11H4z" fill="#00B050" opacity=".9"/></svg>
+      <div><b>Kiểm soát mớn nước</b><small>Draft survey · than</small></div>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-view="calc" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h2m4 0h2M8 15h2m4 0h2M8 18h2"/></svg>Tính mớn nước</button>
+      <button data-view="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="m8.5 12.5 2.5 2.5 5-6"/></svg>Kiểm tra Record (ảnh)</button>
+      <button data-view="fleet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 15h18l-2 4H5z"/><path d="M6 15V9h9l3 6M9 9V5h3v4"/></svg>Tàu đã lưu</button>
+      <button data-view="log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg>Nhật ký kiểm soát</button>
+      <button data-view="guide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5V14M12 17.5v.01"/></svg>Công thức &amp; ngưỡng</button>
+    </nav>
+    <div class="rail-foot">
+      <div class="rail-card" id="railCard"></div>
+      <button class="theme-btn" id="themeBtn" type="button">Giao diện: theo hệ thống</button>
+    </div>
+  </aside>
+
+  <main>
+    <div class="wrap">
+
+      <!-- ============ CALC ============ -->
+      <section class="view" id="v-calc">
+        <div class="head">
+          <div>
+            <div class="eyebrow">Giám định mớn nước</div>
+            <h1>Tính khối lượng hàng theo mớn</h1>
+            <p>Nhập mớn đọc lần đầu và lần cuối, thông số tàu và số tra bảng thủy tĩnh. Mọi bước tính chạy lại ngay khi anh sửa một ô.</p>
+          </div>
+          <div class="actions">
+            <button class="btn" id="btnExample" type="button">Nạp ví dụ mẫu</button>
+            <button class="btn" id="btnClear" type="button">Làm phiếu mới</button>
+            <button class="btn" id="btnCopy" type="button">Sao chép kết quả</button>
+            <button class="btn green" id="btnSaveLog" type="button">Lưu vào nhật ký</button>
+          </div>
+        </div>
+        <div class="seg" id="typeSeg" role="group" aria-label="Loại phương tiện"></div>
+        <div class="legend" role="note" aria-label="Chú thích màu ô"><b>Cách đọc màu ô</b>
+          <span><i class="sw in"></i><strong>Ô hồng</strong><em>gõ số liệu</em></span>
+          <span><i class="sw req"></i><strong>Viền đứt</strong><em>ô cần nhập, đang trống</em></span>
+          <span><i class="sw sel"></i><strong>Ô xanh</strong><em>chỉ chọn, không gõ</em></span>
+          <span><i class="sw lk"></i><strong>Ô xám có khóa</strong><em>tự tính, chỉ xem</em></span>
+          <span><i class="sw ai"></i><strong>Ô vàng chấm</strong><em>số đọc từ ảnh, cần dò lại</em></span></div>
+        <div id="srcBanner"></div>
+        <div class="card" id="summaryCard"></div>
+        <div class="card">
+          <h2>Chuyến hàng</h2>
+          <p class="card-sub">Thông tin chứng thư và khối lượng theo vận đơn để so sánh.</p>
+          <div class="fields" id="metaFields"></div>
+        </div>
+        <details class="card" id="vesselCard" open>
+          <summary><div><h2>Thông số tàu &amp; bảng thủy tĩnh</h2><div class="card-sub" style="margin:2px 0 0" id="vesselSub"></div></div><svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></summary>
+          <div style="display:grid;gap:18px">
+            <div class="fields" id="vesselFields"></div>
+            <div id="tablesBox" style="display:grid;gap:16px"></div>
+            <div class="actions"><button class="btn sm" id="btnSaveVessel" type="button">Lưu tàu này vào danh sách</button></div>
+          </div>
+        </details>
+        <div class="grid2" id="surveys"></div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <div style="padding:18px 20px 12px"><h2 style="font-size:var(--fs-lg)">Bảng tính từng bước</h2><p class="card-sub" style="margin-bottom:0" id="stepsSub">Toàn bộ bảng là ô khóa, chỉ hiển thị. Theo đúng trình tự trong sổ tay. Khi có Record, cột Record và Δ cho thấy bước nào bị lệch.</p></div>
+          <div class="tbl-wrap" style="border:0;border-top:1px solid var(--line);border-radius:0"><table class="steps" id="stepsTbl"></table></div>
+        </div>
+      </section>
+
+      <!-- ============ CHECK ============ -->
+      <section class="view" id="v-check" hidden>
+        <div class="head">
+          <div>
+            <div class="eyebrow">Đối soát biên bản</div>
+            <h1>Kiểm tra Record đo mớn bằng ảnh</h1>
+            <p>Chụp hoặc tải ảnh biên bản Draft Survey Record. Claude đọc từng con số, công cụ tính lại toàn bộ các bước và chỉ ra chỗ sai lệch so với Record và so với B/L.</p>
+          </div>
+        </div>
+        <div class="card" style="display:grid;gap:16px">
+          <div class="legend" role="note" aria-label="Chú thích màu ô"><b>Cách đọc màu ô</b>
+          <span><i class="sw in"></i><strong>Ô hồng</strong><em>gõ số liệu</em></span>
+          <span><i class="sw req"></i><strong>Viền đứt</strong><em>ô cần nhập, đang trống</em></span>
+          <span><i class="sw sel"></i><strong>Ô xanh</strong><em>chỉ chọn, không gõ</em></span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end">
+            <div class="field"><label for="ckType">Loại phương tiện</label><select id="ckType"></select></div>
+            <div class="field"><label for="ckOp">Tác nghiệp</label><select id="ckOp"><option value="discharge">Dỡ hàng (lần đầu có hàng)</option><option value="load">Xếp hàng (lần đầu tàu không)</option></select></div>
+            <div class="field"><label for="ckBl">Khối lượng B/L <i>(t, nếu Record không ghi)</i></label><input id="ckBl" class="n opt" inputmode="decimal" placeholder="VD 51470"></div>
+          </div>
+          <label class="drop" id="drop" for="ckFiles">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+            <b>Chụp ảnh hoặc chọn ảnh Record</b>
+            <p>Có thể chọn nhiều ảnh: trang lần đầu, trang lần cuối, trang tính dầu nước. Dán ảnh (Ctrl+V) hoặc kéo thả vào đây cũng được. Ảnh nên chụp thẳng, đủ sáng, rõ số.</p>
+            <input id="ckFiles" type="file" accept="image/*" multiple hidden>
+          </label>
+          <div class="actions" style="justify-content:center;margin-top:-6px">
+            <label class="btn sm" for="ckCam">Mở camera chụp</label><input id="ckCam" type="file" accept="image/*" capture="environment" hidden>
+          </div>
+          <div class="thumbs" id="thumbs"></div>
+          <div class="field"><label for="ckNote">Ghi chú cho Claude <i>(không bắt buộc)</i></label><input id="ckNote" class="opt" placeholder="VD: ảnh 1 là lần đầu ngày 10/10, ảnh 2 là lần cuối; LCF trong sổ ghi + là phía mũi"></div>
+          <div class="actions">
+            <button class="btn primary" id="btnRun" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m8.5 12.5 2.5 2.5 5-6"/><circle cx="12" cy="12" r="9"/></svg>Đọc &amp; kiểm tra Record</button>
+            <button class="btn" id="btnStop" type="button" hidden>Dừng</button>
+          </div>
+          <div id="apiBox"></div>
+          <div id="ckStatus"></div>
+        </div>
+        <div id="ckResult" style="display:grid;gap:20px"></div>
+      </section>
+
+      <!-- ============ FLEET ============ -->
+      <section class="view" id="v-fleet" hidden>
+        <div class="head"><div><div class="eyebrow">Hồ sơ phương tiện</div><h1>Tàu &amp; sà lan đã lưu</h1><p>Lưu thông số và bảng thủy tĩnh một lần, lần sau chọn tàu là có đủ số liệu tra. Khi đọc Record của tàu trùng tên, công cụ tự đối chiếu số tra trong Record với bảng đã lưu.</p></div></div>
+        <div class="card" style="padding:0;overflow:hidden"><div class="tbl-wrap" style="border:0"><div id="fleetList"></div></div></div>
+      </section>
+
+      <!-- ============ LOG ============ -->
+      <section class="view" id="v-log" hidden>
+        <div class="head"><div><div class="eyebrow">Theo dõi chênh lệch</div><h1>Nhật ký kiểm soát khối lượng</h1><p>Mỗi lần lưu ghi lại khối lượng theo mớn, B/L, tỷ lệ chênh lệch và kết quả kiểm tra Record.</p></div><div class="actions"><button class="btn" id="btnCopyLog" type="button">Sao chép bảng</button></div></div>
+        <div class="kpis" id="logKpis"></div>
+        <div class="card" style="padding:0;overflow:hidden"><div class="tbl-wrap" style="border:0"><div id="logList"></div></div></div>
+      </section>
+
+      <!-- ============ GUIDE ============ -->
+      <section class="view" id="v-guide" hidden>
+        <div class="head"><div><div class="eyebrow">Theo Sổ tay tính toán mớn nước</div><h1>Công thức &amp; ngưỡng chấp nhận</h1><p>Công cụ dùng đúng các công thức dưới đây. Hàng hóa = hiệu hai lượng chiếm nước tịnh trước và sau làm hàng; hằng số constant chỉ để tham khảo.</p></div></div>
+        <div class="card" style="display:grid;gap:12px">
+          <h2>Ngưỡng chênh lệch so với B/L</h2>
+          <div class="band">
+            <div style="background:var(--ok-bg)"><b style="color:var(--ok)">≤ 0,3 %</b>Đạt. Không phải băn khoăn.</div>
+            <div style="background:var(--warn-bg)"><b style="color:var(--warn)">0,3 – 0,5 %</b>Kiểm tra kỹ lại bài toán giám định và ghi rõ lý do.</div>
+            <div style="background:var(--bad-bg)"><b style="color:var(--bad)">&gt; 0,5 %</b>Phải có giám định trung gian.</div>
+          </div>
+        </div>
+        <div class="guide">
+          <div class="card"><h3>Tàu biển &amp; sà lan biển</h3><ol>
+            <li>Mớn TB mũi, lái, giữa = (P + S) / 2; Trim quan sát = Lái − Mũi.</li>
+            <li>Hiệu chỉnh về đường vuông góc: <span class="fx">C = Trim × d / (LBP − d1 − d2)</span>. Chúi lái: C1 &lt; 0, C2 &gt; 0; C3 âm nếu thước giữa ở phía lái.</li>
+            <li>Final mean <span class="fx">= (F + A + 6M) / 8</span>, qua FA → MM → FM.</li>
+            <li>Tra Displacement, TPC, LCF tại FM; MTC tại FM ± 0,5 m; <span class="fx">dM/dZ = MTC+ − MTC−</span>.</li>
+            <li><span class="fx">Trim 1 = Trim × LCF × TPC × 100 / LBP</span>, <span class="fx">Trim 2 = Trim² × dM/dZ × 50 / LBP</span> (luôn dương).</li>
+            <li><span class="fx">HC tỷ trọng = (Disp + HC trim) × (ρ − 1,025) / 1,025</span>.</li>
+            <li>Net = Disp hiệu chỉnh − (BW + FW + FO + DO + LO + khác).</li>
+            <li>Sà lan biển: d1 = d2 = d3 = 0, LBP lấy bằng LOA, LCF tra từ lái nên <span class="fx">LCF = LBP/2 − LCF tra</span>.</li>
+          </ol></div>
+          <div class="card"><h3>Dấu của LCF trong công cụ</h3><ul>
+            <li>Công cụ đổi mọi LCF về khoảng cách tính từ giữa tàu, <b>dương = phía lái (A), âm = phía mũi (F)</b>, và Trim mang dấu (+ chúi lái).</li>
+            <li>Khi đó Trim 1 tự đúng dấu: chúi lái mà LCF ở phía lái thì Trim 1 dương, đúng như quy ước trong sổ tay.</li>
+            <li>Bảng tra ghi chữ A/F (ví dụ <span class="fx">1.81 A</span>, <span class="fx">3.24 F</span>) thì nhập nguyên văn. Bảng chỉ ghi số có dấu thì chọn quy ước "Số dương nghĩa là" cho đúng sổ của tàu.</li>
+            <li>Sai dấu LCF là lỗi hay gặp nhất trong Record: cột Δ sẽ báo "Sai dấu" ở dòng Trim 1.</li>
+          </ul></div>
+          <div class="card"><h3>Tàu sông (tàu chuột)</h3><ol>
+            <li>Trim quan sát = Mũi TB − Lái TB.</li>
+            <li><span class="fx">Tm = Tđm + Trim × Lm / Lg</span>, <span class="fx">Tl = Tđl − Trim × Ll / Lg</span>.</li>
+            <li>V nội suy 2 chiều theo Tl và Tm từ bảng thể tích.</li>
+            <li><span class="fx">HC nghiêng = 600 × |ΔVPC| × |T1 − T2|</span>.</li>
+            <li><span class="fx">HC biến dạng = 2/3 × (Tg − Ttb) × Fđn</span>.</li>
+            <li>Tải trọng = (V + HC nghiêng + HC biến dạng) × tỷ trọng − dầu, nước.</li>
+          </ol></div>
+          <div class="card"><h3>Sà lan sông</h3><ol>
+            <li>Đo mạn khô 6 điểm, lấy TB trái phải.</li>
+            <li>Mớn = Chiều cao mạn (Dm, Dđ, Dg) − mạn khô TB.</li>
+            <li><span class="fx">Mớn TB = (Mũi + Đuôi + 6 × Giữa) / 8</span>.</li>
+            <li>Tra thể tích theo mớn TB, nhân tỷ trọng nước. Dầu nước trên sà lan nhỏ, coi như không đổi.</li>
+          </ol></div>
+          <div class="card"><h3>Trước khi đọc mớn, yêu cầu đại phó</h3><ul>
+            <li>Dừng bơm chuyển nước ballast, dừng làm hàng, dừng cẩu tàu.</li>
+            <li>Dừng đóng mở nắp hầm, dừng thả kéo neo.</li>
+            <li>Cùng đọc mớn; đo BW, FW, dầu cùng thời điểm đọc mớn.</li>
+            <li>Đọc nhiều lần khi có sóng, lấy trung bình. Đêm tĩnh có thể ném viên đá gần thước để thấy rõ mép nước.</li>
+            <li>Múc mẫu nước tỷ trọng xa cống thải và lỗ thoát nước làm mát; ấn ngập tỷ trọng kế trước khi đọc.</li>
+          </ul></div>
+          <div class="card"><h3>Chú ý kiểm soát than</h3><ul>
+            <li>Nước dằn và nước ngọt là chỗ dễ bị khai sai nhất: bơm bỏ ra ngoài rồi thì không xác định lại được. Đo két cùng lúc đọc mớn.</li>
+            <li>Constant âm hoặc quá nhỏ so với các chuyến trước là dấu hiệu sai số liệu két, sai sổ tra hoặc đọc mớn sai.</li>
+            <li>Mớn P/S lệch trên 15 cm: tàu nghiêng, nên cân bằng lại trước khi đọc.</li>
+            <li>Công cụ kiểm tra chéo Displacement bằng TPC giữa hai lần đọc: lệch trên 1,5 % thường là tra bảng sai dòng.</li>
+          </ul></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+/* ===== Draft survey engine (theo Sổ tay tính toán mớn nước) ===== */
+const DS = (() => {
+  const isNum = (x) => typeof x === "number" && isFinite(x);
+  function num(v) {
+    if (v == null) return null;
+    if (typeof v === "number") return isFinite(v) ? v : null;
+    let s = String(v).trim().replace(/\s+/g, "").replace(/[^\d.,+\-eE]/g, "");
+    if (!s || s === "-" || s === ".") return null;
+    const lc = s.lastIndexOf(","), ld = s.lastIndexOf(".");
+    if (lc >= 0 && ld >= 0) {
+      if (lc > ld) s = s.replace(/\./g, "").replace(",", ".");
+      else s = s.replace(/,/g, "");
+    } else if (lc >= 0) {
+      s = (s.match(/,/g).length > 1) ? s.replace(/,/g, "") : s.replace(",", ".");
+    }
+    const n = parseFloat(s);
+    return isFinite(n) ? n : null;
+  }
+  const r = (x, d = 3) => (isNum(x) ? Math.round(x * 10 ** d + (x >= 0 ? 1e-9 : -1e-9)) / 10 ** d : null);
+  const avg = (a, b) => (isNum(a) && isNum(b) ? (a + b) / 2 : isNum(a) ? a : isNum(b) ? b : null);
+
+  /* LCF -> mét tính từ giữa tàu, dương = phía lái (A) */
+  function lcfAft(raw, vessel) {
+    if (raw == null || raw === "") return null;
+    const s = String(raw).toUpperCase();
+    const n = num(s.replace(/[AF]/g, ""));
+    if (!isNum(n)) return null;
+    const lbp = num(vessel.lbp);
+    if (vessel.lcfRef === "ap") return isNum(lbp) ? lbp / 2 - Math.abs(n) : null;
+    if (vessel.lcfRef === "fp") return isNum(lbp) ? Math.abs(n) - lbp / 2 : null;
+    if (/A/.test(s)) return Math.abs(n);
+    if (/F/.test(s)) return -Math.abs(n);
+    return vessel.lcfPlus === "fwd" ? -n : n;
+  }
+  const lcfLabel = (v) => (isNum(v) ? `${Math.abs(v).toFixed(3)} ${v >= 0 ? "A" : "F"}` : "—");
+
+  /* Nội suy tuyến tính theo một cột của bảng */
+  function interp(rows, xKey, yKey, x, yFn) {
+    if (!isNum(x)) return null;
+    const pts = [];
+    for (const row of rows || []) {
+      const xv = num(row[xKey]);
+      const yv = yFn ? yFn(row[yKey]) : num(row[yKey]);
+      if (isNum(xv) && isNum(yv)) pts.push([xv, yv]);
+    }
+    pts.sort((a, b) => a[0] - b[0]);
+    const u = pts.filter((p, i) => i === 0 || p[0] !== pts[i - 1][0]);
+    if (!u.length) return null;
+    for (const p of u) if (Math.abs(p[0] - x) < 1e-9) return { v: p[1], x1: p[0], y1: p[1], x2: p[0], y2: p[1], extrap: false };
+    if (u.length < 2) return null;
+    let i = u.findIndex((p) => p[0] > x);
+    let extrap = false;
+    if (i === -1) { i = u.length - 1; extrap = true; } else if (i === 0) { i = 1; extrap = true; }
+    const [x1, y1] = u[i - 1], [x2, y2] = u[i];
+    return { v: y1 + ((x - x1) * (y2 - y1)) / (x2 - x1), x1, y1, x2, y2, extrap };
+  }
+
+  /* Nội suy 2 chiều V(Tl, Tm) cho tàu sông */
+  function bilinear(grid, tl, tm) {
+    if (!isNum(tl) || !isNum(tm)) return null;
+    const rows = (grid || []).map((g) => ({ tl: num(g.tl), tm: num(g.tm), v: num(g.v) })).filter((g) => isNum(g.tl) && isNum(g.tm) && isNum(g.v));
+    const tls = [...new Set(rows.map((g) => g.tl))].sort((a, b) => a - b);
+    if (!tls.length) return null;
+    let a, b, extrap = false;
+    const ex = tls.find((t) => Math.abs(t - tl) < 1e-9);
+    if (ex != null) { a = b = ex; }
+    else {
+      if (tls.length < 2) return null;
+      let i = tls.findIndex((t) => t > tl);
+      if (i === -1) { i = tls.length - 1; extrap = true; } else if (i === 0) { i = 1; extrap = true; }
+      a = tls[i - 1]; b = tls[i];
+    }
+    const va = interp(rows.filter((g) => g.tl === a), "tm", "v", tm);
+    const vb = interp(rows.filter((g) => g.tl === b), "tm", "v", tm);
+    if (!va || !vb) return null;
+    const v = a === b ? va.v : va.v + ((tl - a) * (vb.v - va.v)) / (b - a);
+    return { v, va: va.v, vb: vb.v, tlA: a, tlB: b, extrap: extrap || va.extrap || vb.extrap };
+  }
+
+  const LIQ = ["BW", "FW", "FO", "DO", "LO", "OT"];
+  function liquids(list) {
+    const t = { BW: 0, FW: 0, FO: 0, DO: 0, LO: 0, OT: 0 };
+    for (const l of list || []) {
+      const vol = num(l.vol), d = num(l.dens);
+      const m = isNum(vol) && isNum(d) ? vol * d : num(l.mass);
+      if (isNum(m)) t[LIQ.includes(l.type) ? l.type : "OT"] += m;
+    }
+    for (const k in t) t[k] = r(t[k], 3);
+    t.total = r(LIQ.reduce((s, k) => s + t[k], 0), 3);
+    return t;
+  }
+
+  function pushLiq(S, lq) {
+    const names = { BW: "Nước dằn (BW)", FW: "Nước ngọt (FW)", FO: "Dầu FO", DO: "Dầu DO", LO: "Dầu nhờn LO", OT: "Khác (két lắng, két tràn…)" };
+    const keys = { BW: "bw", FW: "fw", FO: "fo", DO: "do", LO: "lo", OT: "other" };
+    for (const k of LIQ) if (lq[k] || k === "BW" || k === "FW" || k === "FO" || k === "DO") S.add(keys[k], names[k], lq[k], "t", 3, "", "Trừ dầu, nước");
+    S.add("deduct", "Tổng dầu + nước", lq.total, "t", 3, "BW + FW + FO + DO + LO + khác", "Trừ dầu, nước");
+  }
+
+  function steps() {
+    const list = [];
+    const map = {};
+    return {
+      list, map,
+      add(k, label, v, unit, dp, f, group, extra) {
+        const s = Object.assign({ k, label, v: isNum(v) ? v : null, unit, dp, f, group }, extra || {});
+        list.push(s); map[k] = s.v; return s.v;
+      },
+      warn: [],
+    };
+  }
+
+  /* ---------- Tàu biển & sà lan biển ---------- */
+  function calcSea(vessel, sv) {
+    const S = steps();
+    const L = num(vessel.lbp), rho0 = num(vessel.stdDens) || 1.025;
+    const G1 = "Mớn đọc", G2 = "Hiệu chỉnh về đường vuông góc", G3 = "Mớn trung bình", G4 = "Tra bảng thủy tĩnh", G5 = "Hiệu chỉnh trim & tỷ trọng";
+    const fP = num(sv.fp), fS = num(sv.fs), aP = num(sv.ap), aS = num(sv.as);
+    let mP = num(sv.mp), mS = num(sv.ms);
+    const fw = S.add("fwdMean", "Mũi TB (P+S)/2", r(avg(fP, fS), 3), "m", 3, "(P + S) / 2", G1);
+    const af = S.add("aftMean", "Lái TB (P+S)/2", r(avg(aP, aS), 3), "m", 3, "(P + S) / 2", G1);
+    let md;
+    if (vessel.noMid || (!isNum(mP) && !isNum(mS))) {
+      md = S.add("midMean", "Giữa TB (không có thước giữa)", r(avg(fw, af), 3), "m", 3, "(Mũi TB + Lái TB) / 2", G1);
+    } else md = S.add("midMean", "Giữa TB (P+S)/2", r(avg(mP, mS), 3), "m", 3, "(P + S) / 2", G1);
+    const ot = S.add("obsTrim", "Trim quan sát", isNum(af) && isNum(fw) ? r(af - fw, 3) : null, "m", 3, "Lái TB − Mũi TB", G1);
+    if (isNum(fP) && isNum(fS) && Math.abs(fP - fS) > 0.15) S.warn.push(`Mớn mũi P/S lệch ${(Math.abs(fP - fS) * 100).toFixed(0)} cm — tàu nghiêng hoặc đọc sai.`);
+    if (isNum(mP) && isNum(mS) && Math.abs(mP - mS) > 0.15) S.warn.push(`Mớn giữa P/S lệch ${(Math.abs(mP - mS) * 100).toFixed(0)} cm — tàu nghiêng nhiều, nên đọc lại.`);
+
+    const dF = (num(vessel.dF) || 0) * (vessel.dFpos === "fwd" ? -1 : 1);
+    const dA = (num(vessel.dA) || 0) * (vessel.dApos === "aft" ? -1 : 1);
+    const dM = (num(vessel.dM) || 0) * (vessel.dMpos === "F" ? -1 : 1);
+    const lbm = isNum(L) ? L - dF - dA : null;
+    S.add("lbm", "Khoảng cách 2 thước mũi–lái", r(lbm, 3), "m", 2, "LBP − d1 − d2", G2);
+    const c1 = S.add("c1", "C1 (hiệu chỉnh mũi)", isNum(ot) && lbm ? r((-ot * dF) / lbm, 3) : null, "m", 3, "−Trim × d1 / (LBP − d1 − d2)", G2);
+    const c2 = S.add("c2", "C2 (hiệu chỉnh lái)", isNum(ot) && lbm ? r((ot * dA) / lbm, 3) : null, "m", 3, "Trim × d2 / (LBP − d1 − d2)", G2);
+    const c3 = S.add("c3", "C3 (hiệu chỉnh giữa)", isNum(ot) && lbm ? r((-ot * dM) / lbm, 3) : null, "m", 3, "−Trim × d3 / (LBP − d1 − d2)", G2);
+    const F = S.add("F", "Mớn mũi tại FP (F)", isNum(fw) && isNum(c1) ? r(fw + c1, 3) : null, "m", 3, "Mũi TB + C1", G2);
+    const A = S.add("A", "Mớn lái tại AP (A)", isNum(af) && isNum(c2) ? r(af + c2, 3) : null, "m", 3, "Lái TB + C2", G2);
+    const M = S.add("M", "Mớn giữa (M)", isNum(md) && isNum(c3) ? r(md + c3, 3) : null, "m", 3, "Giữa TB + C3", G2);
+    const T = S.add("trim", "Trim thực (Actual trim)", isNum(A) && isNum(F) ? r(A - F, 3) : null, "m", 3, "A − F  (+ chúi lái)", G2);
+
+    const FA = S.add("FA", "Trung bình mũi lái (FA)", isNum(F) && isNum(A) ? r((F + A) / 2, 3) : null, "m", 3, "(F + A) / 2", G3);
+    const hs = isNum(M) && isNum(FA) ? r(M - FA, 3) : null;
+    S.add("hogsag", hs > 0 ? "Độ võng (sagging)" : hs < 0 ? "Độ cong (hogging)" : "Cong / võng", hs, "m", 3, "M − FA", G3, { info: true });
+    const MM = S.add("MM", "Mean of mean (MM)", isNum(FA) && isNum(M) ? r((FA + M) / 2, 3) : null, "m", 3, "(FA + M) / 2", G3);
+    const FM = S.add("FM", "Final mean (quarter mean)", isNum(MM) && isNum(M) ? r((MM + M) / 2, 4) : null, "m", 4, "(MM + M) / 2 = (F + A + 6M) / 8", G3);
+
+    const h = sv.h || {}, tb = vessel.table || [];
+    const lk = (key, x, fn) => interp(tb, "draft", key, x, fn);
+    const pick = (manual, look, k) => {
+      const m = k === "lcf" ? lcfAft(manual, vessel) : num(manual);
+      if (isNum(m)) return { v: m, src: "Nhập tay / theo Record", tab: look ? look.v : null, look };
+      if (look) return { v: look.v, src: look.extrap ? "Ngoại suy từ bảng" : "Nội suy từ bảng", look };
+      return { v: null, src: "Thiếu số liệu" };
+    };
+    const dispP = pick(h.disp, lk("disp", FM), "disp");
+    const tpcP = pick(h.tpc, lk("tpc", FM), "tpc");
+    const lcfP = pick(h.lcf, lk("lcf", FM, (x) => lcfAft(x, vessel)), "lcf");
+    const mtcPp = pick(h.mtcP, isNum(FM) ? lk("mtc", FM + 0.5) : null, "mtc");
+    const mtcMp = pick(h.mtcM, isNum(FM) ? lk("mtc", FM - 0.5) : null, "mtc");
+    const disp = S.add("disp", `Displacement @ ${rho0}`, r(dispP.v, 3), "t", 3, "Nội suy tại FM", G4, { src: dispP.src, tab: dispP.tab, look: dispP.look });
+    const tpc = S.add("tpc", "TPC", r(tpcP.v, 3), "t/cm", 3, "Nội suy tại FM", G4, { src: tpcP.src, tab: tpcP.tab, look: tpcP.look });
+    const lcf = S.add("lcf", "LCF (từ giữa tàu)", r(lcfP.v, 3), "m", 3, vessel.lcfRef === "ap" ? "LBP/2 − LCF tra (tính từ AP)" : "+ = phía lái (A), − = phía mũi (F)", G4, { src: lcfP.src, tab: lcfP.tab, look: lcfP.look, fmt: lcfLabel });
+    const mtP = S.add("mtcP", "MTC tại FM + 0,5 m", r(mtcPp.v, 3), "t·m", 3, "", G4, { src: mtcPp.src, tab: mtcPp.tab, look: mtcPp.look });
+    const mM = S.add("mtcM", "MTC tại FM − 0,5 m", r(mtcMp.v, 3), "t·m", 3, "", G4, { src: mtcMp.src, tab: mtcMp.tab, look: mtcMp.look });
+    const dmdz = S.add("dmdz", "dM/dZ", isNum(mtP) && isNum(mM) ? r(mtP - mM, 3) : null, "t·m", 3, "MTC(+0,5) − MTC(−0,5)", G4);
+    if (isNum(dmdz) && dmdz < 0) S.warn.push("dM/dZ âm: MTC tại FM+0,5 phải lớn hơn MTC tại FM−0,5. Kiểm tra lại số tra MTC.");
+    if (dispP.look && dispP.look.extrap) S.warn.push("Final mean nằm ngoài bảng thủy tĩnh: Displacement đang được ngoại suy.");
+
+    const t1 = S.add("trim1", "Hiệu chỉnh trim 1 (FTC)", [T, lcf, tpc, L].every(isNum) ? r((T * lcf * tpc * 100) / L, 3) : null, "t", 3, "Trim × LCF × TPC × 100 / LBP", G5);
+    const t2 = S.add("trim2", "Hiệu chỉnh trim 2 (STC)", [T, dmdz, L].every(isNum) ? r((T * T * dmdz * 50) / L, 3) : null, "t", 3, "Trim² × dM/dZ × 50 / LBP", G5);
+    const tc = S.add("trimCorr", "Tổng hiệu chỉnh trim", isNum(t1) && isNum(t2) ? r(t1 + t2, 3) : null, "t", 3, "Trim 1 + Trim 2", G5);
+    const dt = S.add("dispTrim", "Displacement đã hiệu chỉnh trim", isNum(disp) && isNum(tc) ? r(disp + tc, 3) : null, "t", 3, "Disp + tổng hiệu chỉnh trim", G5);
+    const rho = num(sv.dens);
+    S.add("dens", "Tỷ trọng nước đo được", rho, "t/m³", 4, "", G5, { info: true });
+    if (isNum(rho) && (rho < 0.995 || rho > 1.031)) S.warn.push(`Tỷ trọng ${rho} nằm ngoài khoảng thường gặp 0,995–1,030. Kiểm tra lại tỷ trọng kế.`);
+    const dc = S.add("densCorr", "Hiệu chỉnh tỷ trọng", isNum(dt) && isNum(rho) ? r((dt * (rho - rho0)) / rho0, 3) : null, "t", 3, `(Disp trim) × (ρ − ${rho0}) / ${rho0}`, G5);
+    const cd = S.add("corrDisp", "Displacement hiệu chỉnh hoàn toàn", isNum(dt) && isNum(dc) ? r(dt + dc, 3) : null, "t", 3, "Disp trim + hiệu chỉnh tỷ trọng", G5);
+    const lq = liquids(sv.liquids);
+    pushLiq(S, lq);
+    S.add("net", "Lượng chiếm nước tịnh (Net)", isNum(cd) ? r(cd - lq.total, 3) : null, "t", 3, "Disp hiệu chỉnh − dầu, nước", "Kết quả", { key: true });
+    return S;
+  }
+
+  /* ---------- Tàu sông (tàu chuột) ---------- */
+  function calcRiver(vessel, sv) {
+    const S = steps();
+    const G1 = "Mớn đọc", G2 = "Hiệu chỉnh về đường vuông góc", G3 = "Thể tích chiếm nước", G4 = "Hiệu chỉnh nghiêng & biến dạng";
+    const T1 = num(sv.mp), T2 = num(sv.ms);
+    const tdm = S.add("fwdMean", "Mũi TB Tđm", r(avg(num(sv.fp), num(sv.fs)), 3), "m", 3, "(Trái + Phải) / 2", G1);
+    const tdl = S.add("aftMean", "Lái TB Tđl", r(avg(num(sv.ap), num(sv.as)), 3), "m", 3, "(Trái + Phải) / 2", G1);
+    const tg = S.add("midMean", "Giữa TB Tg", r(avg(T1, T2), 3), "m", 3, "(T1 + T2) / 2", G1);
+    const ot = S.add("obsTrim", "Trim quan sát", isNum(tdm) && isNum(tdl) ? r(tdm - tdl, 3) : null, "m", 3, "Mũi TB − Lái TB (theo sổ tay tàu sông)", G1);
+    const Lm = num(vessel.lm) || 0, Ll = num(vessel.ll) || 0, Lg = num(vessel.lg);
+    const tm = S.add("Tm", "Mớn mũi hiệu chỉnh Tm", isNum(ot) && Lg ? r(tdm + (ot * Lm) / Lg, 3) : null, "m", 3, "Tđm + Trim × Lm / Lg", G2);
+    const tl = S.add("Tl", "Mớn lái hiệu chỉnh Tl", isNum(ot) && Lg ? r(tdl - (ot * Ll) / Lg, 3) : null, "m", 3, "Tđl − Trim × Ll / Lg", G2);
+    const ttb = S.add("Ttb", "Mớn TB mũi lái Ttb", isNum(tm) && isNum(tl) ? r((tm + tl) / 2, 3) : null, "m", 3, "(Tm + Tl) / 2", G2);
+    const h = sv.h || {};
+    const bl = bilinear(vessel.vgrid, tl, tm);
+    const vm = num(h.v);
+    const V = S.add("V", "Thể tích chiếm nước V", r(isNum(vm) ? vm : bl ? bl.v : null, 3), "m³", 3, "Nội suy 2 chiều theo Tl và Tm", G3, { src: isNum(vm) ? "Nhập tay / theo Record" : bl ? (bl.extrap ? "Ngoại suy từ bảng" : "Nội suy từ bảng") : "Thiếu số liệu", tab: isNum(vm) && bl ? bl.v : null });
+    const dT = S.add("dT", "Hiệu số mớn giữa |T1 − T2|", isNum(T1) && isNum(T2) ? r(Math.abs(T1 - T2), 3) : null, "m", 3, "|T1 − T2|", G4);
+    const tb = vessel.table || [];
+    const p = (m, look) => (isNum(num(m)) ? num(m) : look ? look.v : null);
+    const v1 = S.add("vpc1", "VPC1 tại T1", r(p(h.vpc1, interp(tb, "draft", "vpc", T1)), 3), "m³/cm", 3, "Nội suy theo T1", G4);
+    const v2 = S.add("vpc2", "VPC2 tại T2", r(p(h.vpc2, interp(tb, "draft", "vpc", T2)), 3), "m³/cm", 3, "Nội suy theo T2", G4);
+    const dv = S.add("dVpc", "|ΔVPC|", isNum(v1) && isNum(v2) ? r(Math.abs(v1 - v2), 3) : null, "m³/cm", 3, "|VPC1 − VPC2|", G4);
+    const tbd = S.add("tbd", "Giá trị biến dạng Tbd", isNum(tg) && isNum(ttb) ? r(tg - ttb, 3) : null, "m", 3, "Tg − Ttb", G4);
+    const fdn = S.add("fdn", "Diện tích đường nước Fđn", r(p(h.fdn, interp(tb, "draft", "fdn", ttb)), 3), "m²", 3, "Nội suy theo Ttb", G4);
+    const hc = S.add("heelCorr", "Hiệu chỉnh nghiêng", isNum(dv) && isNum(dT) ? r(600 * dv * dT, 3) : null, "m³", 3, "600 × |ΔVPC| × |ΔT|", G4);
+    const dfc = S.add("deformCorr", "Hiệu chỉnh biến dạng", isNum(tbd) && isNum(fdn) ? r((2 / 3) * tbd * fdn, 3) : null, "m³", 3, "2/3 × Tbd × Fđn", G4);
+    const vhc = S.add("vhc", "Thể tích sau hiệu chỉnh Vhc", [V, hc, dfc].every(isNum) ? r(V + hc + dfc, 3) : null, "m³", 3, "V + hiệu chỉnh nghiêng + biến dạng", G4);
+    const rho = num(sv.dens);
+    S.add("dens", "Tỷ trọng nước đo được", rho, "t/m³", 4, "", G4, { info: true });
+    const cd = S.add("corrDisp", "Tải trọng toàn phần", isNum(vhc) && isNum(rho) ? r(vhc * rho, 3) : null, "t", 3, "Vhc × tỷ trọng", G4);
+    const lq = liquids(sv.liquids);
+    pushLiq(S, lq);
+    S.add("net", "Tải trọng sau hiệu chỉnh (Net)", isNum(cd) ? r(cd - lq.total, 3) : null, "t", 3, "Tải trọng toàn phần − dầu, nước", "Kết quả", { key: true });
+    return S;
+  }
+
+  /* ---------- Sà lan sông ---------- */
+  function calcRiverBarge(vessel, sv) {
+    const S = steps();
+    const G1 = vessel.mode === "draft" ? "Mớn đọc" : "Mạn khô đo được", G2 = "Mớn nước", G3 = "Thể tích & tải trọng";
+    const fb = vessel.mode !== "draft";
+    const a = S.add("fwdMean", fb ? "Mạn khô mũi TB" : "Mũi TB", r(avg(num(sv.fp), num(sv.fs)), 3), "m", 3, "(Trái + Phải) / 2", G1);
+    const b = S.add("aftMean", fb ? "Mạn khô đuôi TB" : "Đuôi TB", r(avg(num(sv.ap), num(sv.as)), 3), "m", 3, "(Trái + Phải) / 2", G1);
+    let c = r(avg(num(sv.mp), num(sv.ms)), 3);
+    c = S.add("midMean", fb ? "Mạn khô giữa TB" : "Giữa TB", c, "m", 3, "(Trái + Phải) / 2", G1);
+    let F = a, A = b, M = c;
+    if (fb) {
+      const Dm = num(vessel.Dm), Dd = num(vessel.Dd), Dg = num(vessel.Dg);
+      F = S.add("F", "Mớn mũi = Dm − mạn khô", isNum(Dm) && isNum(a) ? r(Dm - a, 3) : null, "m", 3, "Dm − mạn khô mũi TB", G2);
+      A = S.add("A", "Mớn đuôi = Dđ − mạn khô", isNum(Dd) && isNum(b) ? r(Dd - b, 3) : null, "m", 3, "Dđ − mạn khô đuôi TB", G2);
+      M = S.add("M", "Mớn giữa = Dg − mạn khô", isNum(Dg) && isNum(c) ? r(Dg - c, 3) : null, "m", 3, "Dg − mạn khô giữa TB", G2);
+    }
+    if (!isNum(M) && isNum(F) && isNum(A)) M = (F + A) / 2;
+    S.add("FA", "TB mớn mũi – đuôi", isNum(F) && isNum(A) ? r((F + A) / 2, 3) : null, "m", 3, "(Mũi + Đuôi) / 2", G2);
+    const FM = S.add("FM", "Mớn TB phương tiện", [F, A, M].every(isNum) ? r((F + A + 6 * M) / 8, 4) : null, "m", 4, "(Mũi + Đuôi + 6 × Giữa) / 8", G2);
+    const look = interp(vessel.table, "draft", "vol", FM);
+    const vm = num((sv.h || {}).v);
+    const V = S.add("V", "Thể tích chiếm nước", r(isNum(vm) ? vm : look ? look.v : null, 3), "m³", 3, "Nội suy theo mớn TB", G3, { src: isNum(vm) ? "Nhập tay / theo Record" : look ? (look.extrap ? "Ngoại suy từ bảng" : "Nội suy từ bảng") : "Thiếu số liệu", tab: isNum(vm) && look ? look.v : null });
+    const rho = num(sv.dens);
+    S.add("dens", "Tỷ trọng nước đo được", rho, "t/m³", 4, "", G3, { info: true });
+    const cd = S.add("corrDisp", "Tải trọng toàn phần", isNum(V) && isNum(rho) ? r(V * rho, 3) : null, "t", 3, "V × tỷ trọng", G3);
+    const lq = liquids(sv.liquids);
+    pushLiq(S, lq);
+    S.add("net", "Tải trọng sau hiệu chỉnh (Net)", isNum(cd) ? r(cd - lq.total, 3) : null, "t", 3, "Tải trọng toàn phần − dầu, nước", "Kết quả", { key: true });
+    return S;
+  }
+
+  function calc(type, vessel, sv) {
+    if (type === "river") return calcRiver(vessel, sv);
+    if (type === "riverbarge") return calcRiverBarge(vessel, sv);
+    return calcSea(vessel, sv);
+  }
+
+  /* Dung sai so sánh với Record */
+  function tolFor(s) {
+    const v = Math.abs(s.v || 0);
+    if (s.unit === "m") return s.dp >= 4 ? 0.0006 : 0.0015;
+    if (s.unit === "t/cm" || s.unit === "m³/cm") return 0.02;
+    if (s.unit === "t·m") return 0.5;
+    if (s.unit === "t/m³") return 0.00051;
+    if (s.unit === "m²") return 0.5;
+    return Math.max(0.3, v * 0.00001);
+  }
+  function compare(S, rep) {
+    const rows = [];
+    let root = null;
+    for (const s of S.list) {
+      const rv = rep ? num(rep[s.k]) : null;
+      if (!isNum(rv) || s.info) { rows.push({ s, rv: isNum(rv) ? rv : null, st: null }); continue; }
+      let cv = s.v;
+      if (!isNum(cv)) { rows.push({ s, rv, st: "na" }); continue; }
+      let d = rv - cv;
+      const tol = tolFor(s);
+      let st = Math.abs(d) <= tol ? "ok" : Math.abs(d) <= tol * 3 ? "warn" : "bad";
+      let note = "";
+      if (st !== "ok" && Math.abs(rv + cv) <= tol && Math.abs(cv) > tol) note = "Sai dấu";
+      if (st === "bad" && !root) { root = s.k; }
+      rows.push({ s, rv, d, st, note });
+    }
+    return { rows, root };
+  }
+
+  function summary(type, op, I, Fn, repI, repF, blQty, lightship) {
+    const nI = isNum(I.map.net) ? I.map.net : num(repI && repI.net);
+    const nF = isNum(Fn.map.net) ? Fn.map.net : num(repF && repF.net);
+    const out = { nI, nF, nIsrc: isNum(I.map.net) ? "calc" : isNum(nI) ? "record" : null, nFsrc: isNum(Fn.map.net) ? "calc" : isNum(nF) ? "record" : null };
+    out.cargo = isNum(nI) && isNum(nF) ? r(op === "load" ? nF - nI : nI - nF, 3) : null;
+    const bl = num(blQty);
+    out.bl = bl;
+    if (isNum(out.cargo) && isNum(bl) && bl > 0) {
+      out.diff = r(out.cargo - bl, 3);
+      out.pct = (out.diff / bl) * 100;
+      const a = Math.abs(out.pct);
+      out.level = a <= 0.3 ? "ok" : a <= 0.5 ? "warn" : "bad";
+    }
+    const ls = num(lightship);
+    if (isNum(ls)) {
+      const lightNet = op === "load" ? nI : nF;
+      if (isNum(lightNet)) out.constant = r(lightNet - ls, 3);
+    }
+    if (type === "sea" || type === "seabarge") {
+      const a = I.map, b = Fn.map;
+      if ([a.FM, b.FM, a.tpc, b.tpc, a.disp, b.disp].every(isNum) && Math.abs(b.FM - a.FM) > 0.2) {
+        const exp = (b.FM - a.FM) * 100 * (a.tpc + b.tpc) / 2;
+        const act = b.disp - a.disp;
+        out.tpcCheck = { exp: r(exp, 1), act: r(act, 1), dev: r(act - exp, 1), pct: ((act - exp) / Math.abs(exp)) * 100 };
+        out.tpcCheck.level = Math.abs(out.tpcCheck.pct) <= 1.5 ? "ok" : Math.abs(out.tpcCheck.pct) <= 3 ? "warn" : "bad";
+      }
+    }
+    return out;
+  }
+
+  return { num, r, interp, bilinear, lcfAft, lcfLabel, calc, compare, summary, liquids, tolFor, isNum };
+})();
+if (typeof module !== "undefined") module.exports = DS;
+
+</script>
+<script>
+(() => {
+"use strict";
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const N = DS.num, isNum = DS.isNum;
+const fmt = (v, dp = 3) => (isNum(v) ? v.toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp }) : "—");
+const fmtS = (v, dp = 3) => (isNum(v) ? (v > 0 ? "+" : "") + fmt(v, dp) : "—");
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 2600); }
+
+/* ================= Cấu hình loại phương tiện ================= */
+const TYPES = {
+  sea: { label: "Tàu biển", cols: ["draft", "disp", "tpc", "lcf", "mtc"], colLabels: "Draft  Displacement  TPC  LCF  MTC" },
+  seabarge: { label: "Sà lan biển", cols: ["draft", "disp", "tpc", "lcf", "mtc"], colLabels: "Draft  Displacement  TPC  LCF  MTC" },
+  river: { label: "Tàu sông (tàu chuột)", cols: ["draft", "vpc", "fdn"], colLabels: "Mớn  VPC (m³/cm)  Fđn (m²)" },
+  riverbarge: { label: "Sà lan sông", cols: ["draft", "vol"], colLabels: "Mớn  Thể tích V (m³)" },
+};
+const OPTS = {
+  dFpos: [["aft", "Sau FP (phía lái)"], ["fwd", "Trước FP"]],
+  dApos: [["fwd", "Trước AP (phía mũi)"], ["aft", "Sau AP"]],
+  dMpos: [["A", "Lệch về lái (A)"], ["F", "Lệch về mũi (F)"]],
+  lcfRef: [["mid", "Từ giữa tàu"], ["ap", "Từ lái (AP)"], ["fp", "Từ mũi (FP)"]],
+  lcfPlus: [["aft", "+ là phía lái (A)"], ["fwd", "+ là phía mũi (F)"]],
+  mode: [["freeboard", "Đo mạn khô"], ["draft", "Đọc mớn trực tiếp"]],
+};
+const SEA_FIELDS = [
+  ["lbp", "LBP", "m"], ["lightship", "Light ship", "t"], ["stdDens", "Tỷ trọng chuẩn của sổ", "t/m³"],
+  ["dF", "d1: thước mũi ↔ FP", "m"], ["dFpos", "Vị trí thước mũi", "sel"],
+  ["dA", "d2: thước lái ↔ AP", "m"], ["dApos", "Vị trí thước lái", "sel"],
+  ["dM", "d3: thước giữa ↔ giữa tàu", "m"], ["dMpos", "Vị trí thước giữa", "sel"],
+  ["lcfRef", "Mốc tính LCF", "sel"], ["lcfPlus", "Dấu LCF trong sổ (khi không ghi A/F)", "sel"], ["noMid", "Không có thước nước giữa", "chk"],
+];
+const VFIELDS = {
+  sea: SEA_FIELDS,
+  seabarge: SEA_FIELDS.map((f) => (f[0] === "lbp" ? ["lbp", "LBP (lấy bằng LOA)", "m"] : f)),
+  river: [["lm", "Lm: thước mũi ↔ đường vuông góc mũi", "m"], ["ll", "Ll: thước lái ↔ đường vuông góc lái", "m"], ["lg", "Lg: khoảng cách 2 đường vuông góc", "m"], ["lightship", "Trọng lượng tàu không", "t"]],
+  riverbarge: [["mode", "Cách đo", "sel"], ["Dm", "Dm: chiều cao mạn ở mũi", "m"], ["Dd", "Dđ: chiều cao mạn ở đuôi", "m"], ["Dg", "Dg: chiều cao mạn ở giữa", "m"], ["lightship", "Trọng lượng sà lan không", "t"]],
+};
+const HFIELDS = {
+  sea: [["disp", "Displacement"], ["tpc", "TPC"], ["lcf", "LCF (ghi A/F)"], ["mtcP", "MTC @ FM+0,5"], ["mtcM", "MTC @ FM−0,5"]],
+  river: [["v", "Thể tích V (m³)"], ["vpc1", "VPC1 tại T1"], ["vpc2", "VPC2 tại T2"], ["fdn", "Fđn tại Ttb"]],
+  riverbarge: [["v", "Thể tích V (m³)"]],
+};
+HFIELDS.seabarge = HFIELDS.sea;
+const LIQ_TYPES = [["BW", "BW · dằn"], ["FW", "FW · ngọt"], ["FO", "FO"], ["DO", "DO"], ["LO", "LO · nhờn"], ["OT", "Khác"]];
+
+const defVessel = (t) => ({
+  sea: { lbp: "", lightship: "", stdDens: "1.025", dF: "0", dFpos: "aft", dA: "0", dApos: "fwd", dM: "0", dMpos: "A", lcfRef: "mid", lcfPlus: "aft", noMid: false, tableText: "" },
+  seabarge: { lbp: "", lightship: "", stdDens: "1.025", dF: "0", dFpos: "aft", dA: "0", dApos: "fwd", dM: "0", dMpos: "A", lcfRef: "ap", lcfPlus: "aft", noMid: false, tableText: "" },
+  river: { lm: "", ll: "", lg: "", lightship: "", tableText: "", gridText: "" },
+  riverbarge: { mode: "freeboard", Dm: "", Dd: "", Dg: "", lightship: "", tableText: "" },
+}[t]);
+const defSurvey = () => ({ fp: "", fs: "", ap: "", as: "", mp: "", ms: "", dens: "", h: {}, liquids: [] });
+const blankState = () => ({
+  type: "sea",
+  meta: { vessel: "", port: "", cargo: "Than", op: "discharge", bl: "", date: "", cert: "" },
+  vessel: { sea: defVessel("sea"), seabarge: defVessel("seabarge"), river: defVessel("river"), riverbarge: defVessel("riverbarge") },
+  sv: { initial: defSurvey(), final: defSurvey() },
+  rep: null, notes: [], aiFields: [], source: "manual",
+});
+
+/* ================= Ví dụ mẫu (theo số liệu sổ tay) ================= */
+const EX_TABLE = [
+  "Draft\tDisp\tTPC\tLCF\tMTC",
+  ...[[4.5,21244,49.6,"3.30 F",116.2],[4.6,21740.5,49.69,"3.29 F",116.37],[4.7,22237.8,49.78,"3.28 F",116.53],[4.8,22736.1,49.88,"3.26 F",116.7],[4.9,23235.4,49.97,"3.25 F",116.86],[5.0,23735.5,50.06,"3.24 F",117.03],[5.1,24236.5,50.15,"3.23 F",117.19],[5.2,24738.5,50.24,"3.22 F",117.36],[5.3,25241.4,50.34,"3.20 F",117.52],[5.4,25745.3,50.43,"3.19 F",117.69],[5.5,26250,50.52,"3.18 F",117.85],[5.6,26755.6,50.61,"3.17 F",118.02],[5.7,27262.2,50.7,"3.16 F",118.18],[5.8,27769.7,50.8,"3.14 F",118.34]].map((r) => r.join("\t")),
+  "11.60\t\t\t\t131.56", "11.61\t\t\t\t131.57", "12.10\t61222.659\t55.40\t1.810 A\t", "12.20\t61776.230\t55.50\t1.812 A\t", "12.60\t\t\t\t150.03", "12.61\t\t\t\t150.04",
+].join("\n");
+function exampleState() {
+  const s = blankState();
+  s.source = "example";
+  s.meta = { vessel: "MV ĐẠI DƯƠNG 68 (ví dụ)", port: "Bến nhập than (ví dụ)", cargo: "Than nhập khẩu", op: "discharge", bl: "51470", date: "", cert: "" };
+  Object.assign(s.vessel.sea, { lbp: "182", lightship: "8322", dF: "1.2", dA: "9.95", dM: "0.5", dMpos: "A", tableText: EX_TABLE });
+  s.sv.initial = { fp: "12.09", fs: "12.18", ap: "11.98", as: "12.26", mp: "11.89", ms: "12.30", dens: "1.0155", h: {}, liquids: [
+    { type: "FO", name: "Tổng két FO", vol: "", dens: "", mass: "479.68" }, { type: "DO", name: "Tổng két DO", vol: "", dens: "", mass: "36.252" },
+    { type: "BW", name: "Két dằn còn lại", vol: "", dens: "", mass: "31.775" }, { type: "FW", name: "Két nước ngọt", vol: "", dens: "", mass: "120" }] };
+  s.sv.final = { fp: "3.92", fs: "3.95", ap: "6.40", as: "6.43", mp: "5.17", ms: "5.20", dens: "1.0185", h: {}, liquids: [
+    { type: "BW", name: "FPT", vol: "1812.4", dens: "1.0185", mass: "" }, { type: "BW", name: "DBT 1P/S", vol: "2945.0", dens: "1.0185", mass: "" },
+    { type: "BW", name: "DBT 2P/S", vol: "3104.6", dens: "1.0185", mass: "" }, { type: "BW", name: "TST 1P/S", vol: "2980.2", dens: "1.0185", mass: "" },
+    { type: "BW", name: "TST 2P/S", vol: "3028.8", dens: "1.0185", mass: "" }, { type: "BW", name: "APT", vol: "954.0", dens: "1.0185", mass: "" },
+    { type: "FW", name: "Két nước ngọt", vol: "", dens: "", mass: "104.6" }, { type: "FO", name: "Tổng két FO", vol: "", dens: "", mass: "468.9" },
+    { type: "DO", name: "Tổng két DO", vol: "", dens: "", mass: "35.1" }] };
+  return s;
+}
+
+let st = lsGet("ds-current", null) || exampleState();
+if (!st.vessel || !st.sv) st = exampleState();
+for (const t of Object.keys(TYPES)) st.vessel[t] = Object.assign(defVessel(t), st.vessel[t] || {});
+const save = debounce(() => lsSet("ds-current", st), 400);
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+/* ================= Bảng tra ================= */
+function parseTable(text, cols) {
+  const rows = [];
+  for (const line of String(text || "").split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    let parts = line.includes("\t") ? line.split("\t") : line.trim().split(/[;|]+|\s+/);
+    const merged = [];
+    for (const p of parts) {
+      const t = p.trim();
+      if (/^[AF]$/i.test(t) && merged.length) merged[merged.length - 1] += " " + t.toUpperCase();
+      else merged.push(t);
+    }
+    if (!isNum(N(merged[0]))) continue;
+    const row = {};
+    cols.forEach((c, i) => { const v = merged[i]; if (v != null && v !== "" && v !== "-") row[c] = c === "lcf" ? v : N(v); });
+    rows.push(row);
+  }
+  return rows;
+}
+function vesselObj() {
+  const V = Object.assign({}, st.vessel[st.type]);
+  V.table = parseTable(V.tableText, TYPES[st.type].cols);
+  if (st.type === "river") V.vgrid = parseTable(V.gridText, ["tl", "tm", "v"]);
+  return V;
+}
+
+/* ================= Tính toán ================= */
+let R = null;
+function compute() {
+  const V = vesselObj();
+  const I = DS.calc(st.type, V, st.sv.initial), F = DS.calc(st.type, V, st.sv.final);
+  const rep = st.rep || {};
+  const cI = DS.compare(I, rep.initial), cF = DS.compare(F, rep.final);
+  const sum = DS.summary(st.type, st.meta.op, I, F, rep.initial, rep.final, st.meta.bl, V.lightship);
+  R = { V, I, F, cI, cF, sum };
+  return R;
+}
+
+/* ================= Render: form ================= */
+function inputHTML(path, val, cls = "", attrs = "") {
+  const id = "f-" + path.replace(/\./g, "-");
+  const ai = st.aiFields && st.aiFields.includes(path) ? " from-ai" : "";
+  const ph = /placeholder=/.test(attrs) ? "" : ' placeholder=" "';
+  return `<input id="${id}" data-b="${path}" class="n in${cls}${ai}" inputmode="decimal" autocomplete="off" value="${esc(val)}" ${attrs}${ph}>`;
+}
+function renderTypeSeg() {
+  $("#typeSeg").innerHTML = Object.entries(TYPES).map(([k, t]) => `<button type="button" data-type="${k}" aria-pressed="${st.type === k}">${t.label}</button>`).join("");
+}
+function renderMeta() {
+  const m = st.meta;
+  const f = (k, label, ph, num) => `<div class="field"><label for="f-meta-${k}">${label}</label><input id="f-meta-${k}" data-b="meta.${k}" ${num ? 'class="n" inputmode="decimal"' : ""} value="${esc(m[k])}" placeholder="${ph}"></div>`;
+  $("#metaFields").innerHTML =
+    f("vessel", "Tên tàu / sà lan", "VD: MV Hải Phòng 05") + f("port", "Địa điểm giám định", "VD: Cảng Duyên Hải") + f("cargo", "Tên hàng", "Than") +
+    `<div class="field"><label for="f-meta-op">Tác nghiệp</label><select id="f-meta-op" data-b="meta.op"><option value="discharge" ${m.op === "discharge" ? "selected" : ""}>Dỡ hàng: lần đầu có hàng</option><option value="load" ${m.op === "load" ? "selected" : ""}>Xếp hàng: lần đầu tàu không</option></select></div>` +
+    f("bl", "Khối lượng theo B/L (t)", "VD: 51470", true) + f("cert", "Số chứng thư", "VD: 2610/GĐ (không bắt buộc)").replace('id="f-meta-cert"', 'id="f-meta-cert" class="opt"') + `<div class="field"><label for="f-meta-date">Ngày giám định</label><input id="f-meta-date" type="date" data-b="meta.date" value="${esc(m.date)}"></div>`;
+}
+function renderVessel() {
+  const v = st.vessel[st.type];
+  $("#vesselFields").innerHTML = VFIELDS[st.type].map(([k, label, u]) => {
+    const p = "V." + k, id = "f-V-" + k;
+    if (u === "sel") return `<div class="field"><label for="${id}">${label}</label><select id="${id}" data-b="${p}">${OPTS[k].map(([o, t]) => `<option value="${o}" ${v[k] === o ? "selected" : ""}>${t}</option>`).join("")}</select></div>`;
+    if (u === "chk") return `<div class="field check"><input type="checkbox" id="${id}" data-b="${p}" ${v[k] ? "checked" : ""}><label for="${id}">${label}</label></div>`;
+    const opt = k === "lightship" ? " opt" : "";
+    return `<div class="field"><label for="${id}">${label} <i>(${u})</i></label>${inputHTML(p, v[k], opt, k === "lightship" ? 'placeholder="để tính constant"' : "")}</div>`;
+  }).join("") + (st.type === "sea" || st.type === "seabarge" ? `<div class="field"><label>LBP − d1 − d2 <i>(tự tính)</i></label><output class="lock" data-out="initial:lbm"></output></div>` : "");
+  const T = TYPES[st.type];
+  let html = `<div class="field"><label for="f-V-tableText">${st.type === "river" ? "Bảng VPC và diện tích đường nước" : "Bảng thủy tĩnh"}: dán từ Excel hoặc gõ mỗi dòng <i>${esc(T.colLabels)}</i></label>
+    <textarea id="f-V-tableText" class="tbl in" data-b="V.tableText" spellcheck="false" placeholder="${esc(T.colLabels)}\n12.10\t61222.659\t55.40\t1.810 A\t\n12.20\t61776.230\t55.50\t1.812 A\t">${esc(v.tableText)}</textarea>
+    <div class="tbl-status" id="tblStatus"></div></div>`;
+  if (st.type === "river") html += `<div class="field"><label for="f-V-gridText">Bảng thể tích chiếm nước V theo mớn lái Tl và mớn mũi Tm: mỗi dòng <i>Tl  Tm  V</i></label>
+    <textarea id="f-V-gridText" class="tbl in" data-b="V.gridText" spellcheck="false" placeholder="6.10  6.00  5471.06\n6.10  6.05  5496.24\n6.15  6.00  5524.00\n6.15  6.05  5549.22">${esc(v.gridText)}</textarea><div class="tbl-status" id="gridStatus"></div></div>`;
+  $("#tablesBox").innerHTML = html;
+  updateTableStatus();
+}
+function updateTableStatus() {
+  const V = vesselObj();
+  const t = V.table, el = $("#tblStatus");
+  if (el) {
+    if (!t.length) el.innerHTML = "Chưa có dòng nào. Để trống ô nào thì gõ dấu <b>-</b> (khi gõ tay) hoặc để trống cột (khi dán từ Excel). Không có bảng thì nhập số tra trực tiếp trong từng lần đo.";
+    else { const ds = t.map((r) => r.draft); el.innerHTML = `Đọc được <b>${t.length}</b> dòng, mớn từ <b>${fmt(Math.min(...ds), 2)}</b> đến <b>${fmt(Math.max(...ds), 2)}</b> m. Ô trống được bỏ qua khi nội suy cột đó.`; }
+  }
+  const g = $("#gridStatus");
+  if (g) g.innerHTML = V.vgrid && V.vgrid.length ? `Đọc được <b>${V.vgrid.length}</b> điểm (Tl, Tm, V).` : "Chưa có dữ liệu thể tích.";
+  const sub = $("#vesselSub");
+  if (sub) {
+    const v = st.vessel[st.type];
+    sub.textContent = st.type === "sea" || st.type === "seabarge" ? `LBP ${v.lbp || "?"} m · d1 ${v.dF || 0} · d2 ${v.dA || 0} · d3 ${v.dM || 0} m · bảng ${V.table.length} dòng`
+      : st.type === "river" ? `Lm ${v.lm || "?"} · Ll ${v.ll || "?"} · Lg ${v.lg || "?"} m · bảng ${V.table.length} dòng, lưới V ${(V.vgrid || []).length} điểm`
+      : `Dm ${v.Dm || "?"} · Dđ ${v.Dd || "?"} · Dg ${v.Dg || "?"} m · bảng ${V.table.length} dòng`;
+  }
+}
+const RES = {
+  sea: [["trim", "Trim thực"], ["FM", "Final mean"], ["corrDisp", "Disp hiệu chỉnh"], ["deduct", "Dầu + nước"], ["net", "Net (tịnh)"]],
+  river: [["Ttb", "Mớn TB Ttb"], ["vhc", "V hiệu chỉnh"], ["corrDisp", "Tải trọng toàn phần"], ["deduct", "Dầu + nước"], ["net", "Net (tịnh)"]],
+  riverbarge: [["FM", "Mớn TB phương tiện"], ["V", "Thể tích V"], ["corrDisp", "Tải trọng toàn phần"], ["deduct", "Dầu + nước"], ["net", "Net (tịnh)"]],
+};
+RES.seabarge = RES.sea;
+const HKEY = { disp: "disp", tpc: "tpc", lcf: "lcf", mtcP: "mtcP", mtcM: "mtcM", v: "V", vpc1: "vpc1", vpc2: "vpc2", fdn: "fdn" };
+function renderSurveys() {
+  const fb = st.type === "riverbarge" && st.vessel.riverbarge.mode !== "draft";
+  const sides = st.type === "river" || st.type === "riverbarge" ? ["Trái", "Phải"] : ["Trái (P)", "Phải (S)"];
+  const rowsLbl = st.type === "riverbarge" ? ["Mũi", "Giữa", "Đuôi"] : ["Mũi", "Giữa", "Lái"];
+  const tbKeys = ["fwdMean", "midMean", "aftMean"];
+  $("#surveys").innerHTML = ["initial", "final"].map((w) => {
+    const s = st.sv[w], P = `sv.${w}.`;
+    const dr = [["fp", "fs"], ["mp", "ms"], ["ap", "as"]];
+    const grid = `<div class="drafts"><span></span><span class="hd">${sides[0]}</span><span class="hd">${sides[1]}</span><span class="hd">Trung bình</span>` +
+      dr.map((pair, i) => `<span class="rl">${rowsLbl[i]}</span>${pair.map((k) => inputHTML(P + k, s[k], "", `aria-label="${rowsLbl[i]} ${k.endsWith("p") ? sides[0] : sides[1]} lần ${w === "initial" ? "đầu" : "cuối"}" placeholder="0.00"`)).join("")}<output class="lock c" data-out="${w}:${tbKeys[i]}" data-u="0"></output>`).join("") + "</div>";
+    const hf = `<div class="hydro"><span class="hd">Thông số</span><span class="hd">Nhập tay</span><span class="hd">Đang dùng</span>` + HFIELDS[st.type].map(([k, l]) =>
+      `<span class="lb">${l}<small data-src="${w}:${HKEY[k]}"></small></span>${inputHTML(P + "h." + k, (s.h || {})[k], " opt", 'placeholder="—" aria-label="' + l + ' nhập tay"')}<output class="lock sm" data-out="${w}:${HKEY[k]}"></output>`).join("") + "</div>";
+    const lq = (s.liquids || []).map((l, i) => {
+      const auto = isNum(N(l.vol)) && isNum(N(l.dens));
+      return `<tr><td><select data-b="${P}liquids.${i}.type" id="f-${w}-lq-${i}-type" aria-label="Loại">${LIQ_TYPES.map(([k, t]) => `<option value="${k}" ${l.type === k ? "selected" : ""}>${t}</option>`).join("")}</select></td>
+        <td><input class="in opt" data-b="${P}liquids.${i}.name" id="f-${w}-lq-${i}-name" value="${esc(l.name)}" placeholder="Tên két" aria-label="Tên két"></td>
+        <td>${inputHTML(`${P}liquids.${i}.vol`, l.vol, " opt", 'placeholder="m³" aria-label="Thể tích"')}</td>
+        <td>${inputHTML(`${P}liquids.${i}.dens`, l.dens, " opt", 'placeholder="ρ" aria-label="Tỷ trọng"')}</td>
+        <td class="m">${auto ? `<output class="lock sm" data-mass="${w}-${i}"></output>` : inputHTML(`${P}liquids.${i}.mass`, l.mass, "", 'placeholder="tấn" aria-label="Khối lượng"')}</td>
+        <td><button class="x" type="button" data-del="${w}.${i}" aria-label="Xóa dòng">✕</button></td></tr>`;
+    }).join("");
+    const res = RES[st.type].map(([k, l]) => `<div class="field"><label>${l}</label><output class="lock${k === "net" ? " key" : ""}" data-out="${w}:${k}"></output></div>`).join("");
+    return `<div class="card sv-card">
+      <h2>${w === "initial" ? "Lần đầu" : "Lần cuối"} <span class="when">${w === "initial" ? (st.meta.op === "load" ? "trước khi xếp" : "trước khi dỡ") : st.meta.op === "load" ? "sau khi xếp" : "sau khi dỡ"}</span></h2>
+      <div style="display:grid;gap:8px"><div class="sub-h">${fb ? "Mạn khô đo được (m)" : "Mớn nước đọc (m)"}</div>${grid}</div>
+      <div class="fields"><div class="field"><label for="f-sv-${w}-dens">Tỷ trọng nước tại nơi neo đậu <i>(t/m³)</i></label>${inputHTML(P + "dens", s.dens, "", 'placeholder="VD 1.0155"')}</div></div>
+      <div style="display:grid;gap:8px"><div class="sub-h">Số tra bảng <span class="pill info">ô hồng để trống = tự nội suy</span></div>${hf}</div>
+      <div style="display:grid;gap:8px"><div class="sub-h">Dầu, nước trên tàu <button class="btn sm ghost" type="button" data-addliq="${w}">+ Thêm két</button></div>
+        <div class="liq-wrap"><table class="liq"><thead><tr><th style="width:20%">Loại</th><th>Tên két</th><th style="width:16%">V (m³)</th><th style="width:15%">ρ</th><th style="width:20%;text-align:right">Tấn</th><th></th></tr></thead><tbody>${lq || `<tr><td colspan="6" class="note" style="padding:8px 4px">Chưa có két nào. Sà lan thường không cần.</td></tr>`}</tbody></table></div>
+        <p class="note" style="font-size:11px">Nhập V và ρ thì cột Tấn tự tính và khóa lại; bỏ trống V, ρ thì gõ thẳng số tấn.</p>
+        ${w === "final" ? `<div><button class="btn sm ghost" type="button" id="btnCopyLiq">Chép danh sách két từ lần đầu</button></div>` : ""}
+      </div>
+      <div style="display:grid;gap:8px"><div class="sub-h">Kết quả lần đo <span class="pill na">tự tính</span></div><div class="res">${res}</div></div>
+      </div>`;
+  }).join("");
+}
+function fillOutputs() {
+  if (!R) return;
+  $$("[data-out]").forEach((el) => {
+    const [w, k] = el.dataset.out.split(":");
+    const s = (w === "initial" ? R.I : R.F).list.find((x) => x.k === k);
+    const v = s && isNum(s.v) ? (s.fmt ? s.fmt(s.v) : fmt(s.v, s.dp)) : "—";
+    el.innerHTML = `<span class="val">${v}</span>${s && s.unit && el.dataset.u !== "0" && !s.fmt ? `<span class="u">${s.unit}</span>` : ""}`;
+  });
+  $$("[data-src]").forEach((el) => {
+    const [w, k] = el.dataset.src.split(":");
+    const s = (w === "initial" ? R.I : R.F).list.find((x) => x.k === k);
+    el.textContent = s && s.src ? s.src : "";
+  });
+  $$("[data-mass]").forEach((el) => {
+    const [w, i] = el.dataset.mass.split("-"); const l = st.sv[w].liquids[+i];
+    if (l) el.innerHTML = `<span class="val">${fmt(N(l.vol) * N(l.dens), 3)}</span>`;
+  });
+}
+function renderAll() {
+  renderTypeSeg(); renderMeta(); renderVessel(); renderSurveys(); renderBanner(); refresh();
+}
+function renderBanner() {
+  const b = $("#srcBanner");
+  if (st.source === "example") b.innerHTML = `<div class="callout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v.01M11 12h1v5h1"/></svg><div><b>Đang mở ví dụ mẫu.</b> Lần đầu lấy đúng số liệu ví dụ trong sổ tay (tàu biển, LBP 182 m); lần cuối và bảng thủy tĩnh vùng mớn 4,5–5,8 m là số minh họa. Bấm "Làm phiếu mới" để nhập tàu thật.</div></div>`;
+  else if (st.source === "record") b.innerHTML = `<div class="callout warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17v.01"/></svg><div><b>Số liệu đọc từ ảnh Record.</b> Ô tô vàng là số Claude đọc được, anh dò lại với ảnh gốc trước khi kết luận. Sửa ô nào thì bảng tính và cột Δ cập nhật ngay.${st.notes && st.notes.length ? `<br><span class="note">Ghi chú khi đọc: ${st.notes.map(esc).join(" · ")}</span>` : ""}</div></div>`;
+  else b.innerHTML = "";
+}
+
+/* ================= Render: kết quả ================= */
+function levelText(l) { return { ok: "Đạt", warn: "Cần kiểm tra lại", bad: "Vượt ngưỡng" }[l] || "Chưa đủ số liệu"; }
+function recordIssues() {
+  const out = [];
+  const add = (cmp, where) => cmp.rows.forEach((x) => { if (x.st === "bad" || x.st === "warn") out.push({ where, label: x.s.label, k: x.s.k, rv: x.rv, cv: x.s.v, d: x.d, st: x.st, note: x.note, dp: x.s.dp, unit: x.s.unit, root: cmp.root === x.s.k }); });
+  if (st.rep) { add(R.cI, "Lần đầu"); add(R.cF, "Lần cuối"); }
+  for (const [S, where] of [[R.I, "Lần đầu"], [R.F, "Lần cuối"]]) for (const s of S.list) {
+    if (isNum(s.tab) && isNum(s.v)) {
+      const tol = DS.tolFor(s);
+      if (Math.abs(s.v - s.tab) > tol) out.push({ where, label: s.label + " (so với bảng đã lưu)", k: s.k, rv: s.v, cv: s.tab, d: s.v - s.tab, st: Math.abs(s.v - s.tab) > 3 * tol ? "bad" : "warn", note: "Số tra trong Record khác bảng thủy tĩnh", dp: s.dp, unit: s.unit, table: true });
+    }
+  }
+  const rc = st.rep && N(st.rep.cargo);
+  if (isNum(rc) && isNum(R.sum.cargo)) {
+    const d = rc - R.sum.cargo;
+    if (Math.abs(d) > 0.5) out.push({ where: "Kết quả", label: "Khối lượng hàng ghi trên Record", k: "cargo", rv: rc, cv: R.sum.cargo, d, st: Math.abs(d) > 1.5 ? "bad" : "warn", dp: 3, unit: "t" });
+  }
+  return out;
+}
+function refresh() {
+  compute();
+  updateTableStatus();
+  renderSummary();
+  renderSteps();
+  renderRail();
+  fillOutputs();
+  save();
+}
+function renderSummary() {
+  const { sum, I, F } = R;
+  const lv = sum.level || "na";
+  const pctTxt = isNum(sum.pct) ? `${sum.pct > 0 ? "+" : ""}${sum.pct.toFixed(3)} %` : "—";
+  const vtitle = lv === "na" ? "Chưa đủ số liệu để so với B/L" : lv === "ok" ? `Chênh lệch ${pctTxt} so với B/L: đạt` : lv === "warn" ? `Chênh lệch ${pctTxt}: cần kiểm tra lại` : `Chênh lệch ${pctTxt}: vượt ngưỡng 0,5 %`;
+  const vdesc = lv === "na" ? "Cần đủ mớn, tỷ trọng và số tra của cả hai lần đo, cùng khối lượng B/L." : lv === "ok" ? "Nằm trong 0,3 %, khối lượng theo mớn chấp nhận được." : lv === "warn" ? "Trong khoảng 0,3–0,5 %: dò lại số tra bảng, tỷ trọng và số đo két, ghi rõ lý do vào biên bản." : "Trên 0,5 %: yêu cầu giám định trung gian, kiểm tra lại mớn đọc, nước dằn và nước ngọt.";
+  const checks = [];
+  const iss = recordIssues();
+  if (st.rep) {
+    const bad = iss.filter((x) => x.st === "bad").length, warn = iss.filter((x) => x.st === "warn").length;
+    const root = iss.find((x) => x.root);
+    checks.push([bad ? "bad" : warn ? "warn" : "ok", bad ? `Record có ${bad} chỗ sai${warn ? `, ${warn} chỗ lệch nhỏ` : ""}${root ? `. Sai bắt đầu từ bước "${root.label}" (${root.where.toLowerCase()})` : ""}.` : warn ? `Record có ${warn} chỗ lệch nhỏ, thường do làm tròn.` : "Các bước tính trên Record khớp với tính lại."]);
+  }
+  if (sum.tpcCheck) {
+    const t = sum.tpcCheck;
+    checks.push([t.level, `Kiểm tra chéo bằng TPC: ΔDisp theo bảng ${fmt(t.act, 1)} t, ước theo TPC ${fmt(t.exp, 1)} t (lệch ${t.pct.toFixed(2)} %). ${t.level === "ok" ? "Số tra Displacement hợp lý." : "Có thể tra sai dòng Displacement hoặc TPC."}`]);
+  }
+  if (isNum(sum.constant)) {
+    const c = sum.constant;
+    checks.push([c < 0 ? "bad" : "info", `Hằng số constant (tham khảo, ${st.meta.op === "load" ? "lần đầu" : "lần cuối"}): ${fmt(c, 1)} t. ${c < 0 ? "Constant âm: kiểm tra số đo két dầu, nước hoặc light ship." : "So với các chuyến trước của tàu để phát hiện bất thường."}`]);
+  }
+  if (sum.nIsrc === "record" || sum.nFsrc === "record") checks.push(["info", "Net của một lần đo lấy theo Record vì thiếu số liệu để tính lại."]);
+  I.warn.forEach((w) => checks.push(["warn", "Lần đầu: " + w]));
+  F.warn.forEach((w) => checks.push(["warn", "Lần cuối: " + w]));
+  const hsI = I.map.hogsag, hsF = F.map.hogsag;
+  [[hsI, "Lần đầu"], [hsF, "Lần cuối"]].forEach(([h, w]) => { if (isNum(h) && Math.abs(h) > 0.15) checks.push(["warn", `${w}: ${h > 0 ? "võng" : "cong"} ${fmt(Math.abs(h) * 100, 1)} cm. Đọc lại mớn giữa hai mạn.`]); });
+  const tag = (l) => `<span class="pill ${l}">${{ ok: "Khớp", warn: "Xem lại", bad: "Sai", info: "Ghi chú" }[l]}</span>`;
+  $("#summaryCard").innerHTML = `<div class="summary reveal">
+    <div style="display:grid;gap:14px;align-content:start;min-width:0">
+      <div class="verdict ${lv}"><div class="ic">${lv === "ok" ? "✓" : lv === "na" ? "…" : "!"}</div><div><b>${vtitle}</b><p>${vdesc}</p></div></div>
+      <div class="kpis">
+        <div class="kpi hero"><span class="k">Hàng theo mớn</span><span class="v num">${fmt(sum.cargo, 3)}<small>t</small></span><span class="s">${st.meta.op === "load" ? "Net lần cuối − Net lần đầu" : "Net lần đầu − Net lần cuối"}</span></div>
+        <div class="kpi"><span class="k">Theo B/L</span><span class="v num">${fmt(sum.bl, 3)}<small>t</small></span><span class="s">${esc(st.meta.cargo || "")}</span></div>
+        <div class="kpi"><span class="k">Chênh lệch</span><span class="v num" style="color:var(--${lv === "na" ? "ink" : lv})">${fmtS(sum.diff, 3)}<small>t</small></span><span class="s">${pctTxt}${isNum(sum.diff) ? (sum.diff < 0 ? " · thiếu so với B/L" : " · thừa so với B/L") : ""}</span></div>
+        <div class="kpi"><span class="k">Net lần đầu / lần cuối</span><span class="v num" style="font-size:clamp(17px,1rem + .5vw,22px)">${fmt(sum.nI, 1)} / ${fmt(sum.nF, 1)}</span><span class="s">Final mean ${fmt(I.map.FM, 3)} / ${fmt(F.map.FM, 3)} m</span></div>
+      </div>
+      ${checks.length ? `<ul class="checks">${checks.map(([l, t]) => `<li>${tag(l)}<span>${esc(t)}</span></li>`).join("")}</ul>` : ""}
+    </div>
+    <div class="ruler-box"><span class="k">Thước nước · Final mean</span>${rulerSVG(I.map.FM, F.map.FM)}</div>
+  </div>`;
+}
+function rulerSVG(a, b) {
+  const vals = [a, b].filter(isNum);
+  const top = Math.max(2, Math.ceil(Math.max(...vals, 1) + 1));
+  const H = 300, W = 200, y0 = 14, y1 = H - 14;
+  const y = (d) => y1 - (d / top) * (y1 - y0);
+  const step = top > 8 ? 0.5 : 0.2, every = top > 10 ? 2 : 1;
+  let marks = "";
+  for (let d = step; d <= top + 1e-9; d += step) {
+    const m = Math.round(d), major = Math.abs(d - m) < 1e-6, yy = y(d);
+    marks += `<rect x="${major ? 58 : 66}" y="${(yy - 1).toFixed(1)}" width="${major ? 22 : 10}" height="2" fill="var(--muted)" opacity="${major ? 0.9 : 0.45}"/>`;
+    if (major && m % every === 0) marks += `<text x="52" y="${(yy + 4).toFixed(1)}" text-anchor="end" font-family="Sora,system-ui" font-size="12" font-weight="700" fill="var(--ink)">${m}M</text>`;
+  }
+  const line = (d, col, lbl, dy) => isNum(d) ? `<g><rect x="84" y="${y(d).toFixed(1)}" width="112" height="${(y1 - y(d)).toFixed(1)}" fill="${col}" opacity=".10"/><line x1="40" x2="196" y1="${y(d).toFixed(1)}" y2="${y(d).toFixed(1)}" stroke="${col}" stroke-width="2.5"/><text x="194" y="${(y(d) + dy).toFixed(1)}" text-anchor="end" font-family="Sora,system-ui" font-size="11.5" font-weight="700" fill="${col}">${lbl} ${fmt(d, 3)} m</text></g>` : "";
+  const close = isNum(a) && isNum(b) && Math.abs(y(a) - y(b)) < 18;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Final mean lần đầu ${fmt(a, 3)} m, lần cuối ${fmt(b, 3)} m">
+    <path d="M86 ${y0} H196 V${y1} H86 Z" fill="none" stroke="var(--line)"/>
+    ${marks}${line(a, "var(--blue)", "Đầu", -6)}${line(b, "var(--green)", "Cuối", close ? 16 : -6)}</svg>`;
+}
+function cellV(s) {
+  if (!s) return "—";
+  const v = s.fmt ? s.fmt(s.v) : fmt(s.v, s.dp);
+  let src = "";
+  if (s.src) {
+    let extra = "";
+    if (isNum(s.tab) && isNum(s.v) && Math.abs(s.tab - s.v) > DS.tolFor(s)) extra = ` · bảng: ${s.fmt ? s.fmt(s.tab) : fmt(s.tab, s.dp)}`;
+    src = `<span class="src">${esc(s.src)}${extra}</span>`;
+  }
+  return v + src;
+}
+function renderSteps() {
+  const { I, F, cI, cF } = R;
+  const hasRep = !!st.rep;
+  const fMap = Object.fromEntries(F.list.map((s) => [s.k, s]));
+  const ciMap = Object.fromEntries(cI.rows.map((x) => [x.s.k, x])), cfMap = Object.fromEntries(cF.rows.map((x) => [x.s.k, x]));
+  const span = hasRep ? 3 : 1;
+  let h = `<thead><tr><th>Bước tính</th><th>Công thức</th><th class="col" colspan="${span}">Lần đầu</th><th class="col" colspan="${span}">Lần cuối</th></tr>`;
+  if (hasRep) h += `<tr><th></th><th></th><th>Tính lại</th><th>Record</th><th>Δ</th><th>Tính lại</th><th>Record</th><th>Δ</th></tr>`;
+  h += "</thead><tbody>";
+  let g = null;
+  const sub = (x, s) => {
+    if (!hasRep) return "";
+    if (!x || x.rv == null) return `<td>—</td><td></td>`;
+    const rv = s && s.fmt ? s.fmt(x.rv) : fmt(x.rv, s ? s.dp : 3);
+    const d = isNum(x.d) ? fmtS(x.d, s ? s.dp : 3) : "";
+    const lbl = x.st === "ok" ? "✓" : x.st === "na" ? "?" : (x.note ? x.note + " " : "") + d;
+    return `<td>${rv}</td><td class="st-${x.st || ""}">${esc(lbl)}</td>`;
+  };
+  for (const s of I.list) {
+    if (s.group !== g) { g = s.group; h += `<tr class="g"><td colspan="${2 + span * 2}">${esc(g)}</td></tr>`; }
+    const fs = fMap[s.k], xi = ciMap[s.k], xf = cfMap[s.k];
+    const root = hasRep && (cI.root === s.k || cF.root === s.k);
+    h += `<tr class="${s.key ? "key" : ""}${root ? " root" : ""}"><td>${esc(s.label)}${root ? '<span class="rootflag">sai từ đây</span>' : ""}${s.unit ? ` <span class="note" style="font-size:11px">(${s.unit})</span>` : ""}</td><td class="f">${esc(s.f || "")}</td>
+      <td class="v c0">${cellV(s)}</td>${sub(xi, s)}<td class="v c0">${cellV(fs)}</td>${sub(xf, fs)}</tr>`;
+  }
+  h += `<tr class="key"><td>Khối lượng hàng</td><td class="f">${st.meta.op === "load" ? "Net cuối − Net đầu" : "Net đầu − Net cuối"}</td><td class="v c0" colspan="${span * 2}" style="text-align:center;font-size:15px">${fmt(R.sum.cargo, 3)} t${st.rep && isNum(N(st.rep.cargo)) ? ` <span class="note">· Record ghi ${fmt(N(st.rep.cargo), 3)} t</span>` : ""}</td></tr>`;
+  $("#stepsTbl").innerHTML = h + "</tbody>";
+}
+function renderRail() {
+  const s = R.sum;
+  $("#railCard").innerHTML = `<div class="k">${esc(st.meta.vessel || "Phiếu hiện tại")}</div><div class="v">${fmt(s.cargo, 1)} t</div><div class="s">${isNum(s.pct) ? `${s.pct > 0 ? "+" : ""}${s.pct.toFixed(2)} % so với B/L · ${levelText(s.level)}` : "Hàng theo mớn"}</div>`;
+}
+
+/* ================= Sự kiện form ================= */
+function setPath(path, val) {
+  const parts = path.split(".");
+  let o = parts[0] === "V" ? st.vessel[st.type] : st;
+  const rest = parts[0] === "V" ? parts.slice(1) : parts;
+  for (let i = 0; i < rest.length - 1; i++) { const k = rest[i]; if (o[k] == null) o[k] = {}; o = o[k]; }
+  o[rest[rest.length - 1]] = val;
+}
+const refreshSoon = debounce(refresh, 120);
+document.addEventListener("input", (e) => {
+  const el = e.target.closest("[data-b]"); if (!el) return;
+  const v = el.type === "checkbox" ? el.checked : el.value;
+  setPath(el.dataset.b, v);
+  if (el.classList.contains("from-ai")) { el.classList.remove("from-ai"); st.aiFields = (st.aiFields || []).filter((p) => p !== el.dataset.b); }
+  if (st.source === "example") { st.source = "manual"; renderBanner(); }
+  const b = el.dataset.b;
+  const structural = /liquids\.\d+\.(vol|dens|type)$/.test(b) || b === "meta.op" || b === "V.mode" || b === "V.noMid";
+  if (structural && el.tagName === "SELECT") { if (b === "meta.op" || b === "V.mode") { renderSurveys(); } refresh(); return; }
+  if (/liquids\.\d+\.(vol|dens)$/.test(b)) {
+    const [, w, , i] = b.split(".");
+    const l = st.sv[w].liquids[+i];
+    const auto = isNum(N(l.vol)) && isNum(N(l.dens));
+    const hasSpan = !!$(`[data-mass="${w}-${i}"]`);
+    if (auto !== hasSpan) { const id = el.id; renderSurveys(); const n = document.getElementById(id); if (n) { n.focus(); const L = n.value.length; try { n.setSelectionRange(L, L); } catch {} } }
+  }
+  refreshSoon();
+});
+document.addEventListener("change", (e) => { const el = e.target.closest("select[data-b],input[type=checkbox][data-b]"); if (el) { setPath(el.dataset.b, el.type === "checkbox" ? el.checked : el.value); if (el.dataset.b === "meta.op" || el.dataset.b === "V.mode") renderSurveys(); refresh(); } });
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("[data-type]");
+  if (t) { st.type = t.dataset.type; renderAll(); return; }
+  const a = e.target.closest("[data-addliq]");
+  if (a) { const w = a.dataset.addliq; st.sv[w].liquids.push({ type: "BW", name: "", vol: "", dens: w === "final" ? st.sv.final.dens || "" : st.sv.initial.dens || "", mass: "" }); renderSurveys(); refresh(); return; }
+  const d = e.target.closest("[data-del]");
+  if (d) { const [w, i] = d.dataset.del.split("."); st.sv[w].liquids.splice(+i, 1); renderSurveys(); refresh(); return; }
+  if (e.target.closest("#btnCopyLiq")) { st.sv.final.liquids = st.sv.initial.liquids.map((l) => ({ ...l, vol: "", mass: "", dens: l.type === "BW" ? st.sv.final.dens || l.dens : l.dens })); renderSurveys(); refresh(); toast("Đã chép danh sách két, anh nhập số đo lần cuối."); return; }
+  const nav = e.target.closest("#nav [data-view]");
+  if (nav) showView(nav.dataset.view);
+});
+$("#btnExample").onclick = () => { st = exampleState(); renderAll(); toast("Đã nạp ví dụ mẫu."); };
+$("#btnClear").onclick = () => { const t = st.type, keepV = st.vessel; st = blankState(); st.type = t; st.vessel = keepV; renderAll(); toast("Phiếu mới: giữ thông số tàu, xóa số đo."); };
+$("#btnCopy").onclick = () => copyText(resultText());
+$("#btnSaveLog").onclick = () => saveLog();
+$("#btnSaveVessel").onclick = () => saveVessel();
+
+function resultText() {
+  const s = R.sum, m = st.meta;
+  const L = [`KẾT QUẢ GIÁM ĐỊNH MỚN NƯỚC – ${m.vessel || ""}`, `Loại: ${TYPES[st.type].label} · ${m.op === "load" ? "Xếp hàng" : "Dỡ hàng"} · ${m.cargo || ""} · ${m.port || ""} ${m.date || ""}`,
+    `Final mean lần đầu / lần cuối: ${fmt(R.I.map.FM, 4)} / ${fmt(R.F.map.FM, 4)} m`,
+    `Net lần đầu: ${fmt(s.nI, 3)} t · Net lần cuối: ${fmt(s.nF, 3)} t`,
+    `Khối lượng hàng theo mớn: ${fmt(s.cargo, 3)} t`, `Theo B/L: ${fmt(s.bl, 3)} t · Chênh lệch: ${fmtS(s.diff, 3)} t (${isNum(s.pct) ? s.pct.toFixed(3) + " %" : "—"}) · ${levelText(s.level)}`];
+  if (isNum(s.constant)) L.push(`Constant tham khảo: ${fmt(s.constant, 1)} t`);
+  const iss = recordIssues();
+  if (st.rep) { L.push(iss.length ? `Sai lệch so với Record (${iss.length}):` : "Record: các bước tính khớp."); iss.forEach((x) => L.push(` - ${x.where}: ${x.label}: Record ${fmt(x.rv, x.dp)} / tính lại ${fmt(x.cv, x.dp)} (Δ ${fmtS(x.d, x.dp)})${x.note ? " – " + x.note : ""}`)); }
+  return L.join("\n");
+}
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); toast("Đã sao chép."); }
+  catch { const ta = document.createElement("textarea"); ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand("copy"); } catch {} ta.remove(); toast(ok ? "Đã sao chép." : "Trình duyệt chặn sao chép, anh bôi đen để chép tay."); }
+}
+
+/* ================= Lưu trữ ================= */
+const Store = {
+  db: null, p: null,
+  init() { if (!this.p) this.p = (async () => { try { if (window.claude && window.claude.use) this.db = await window.claude.use("db"); } catch { this.db = null; } })(); return this.p; },
+  ls(col) { return lsGet("ds-" + col, []); },
+  async list(col) { await this.init(); if (this.db) { try { const s = await this.db.collection(col).get(); return s.docs.map((d) => Object.assign({ id: d.id }, d.data())); } catch (e) { console.warn(e); } } return this.ls(col); },
+  async put(col, id, data) { await this.init(); if (this.db) { await this.db.collection(col).doc(id).set(data); return; } const a = this.ls(col).filter((x) => x.id !== id); a.push(Object.assign({ id }, data)); lsSet("ds-" + col, a); },
+  async del(col, id) { await this.init(); if (this.db) { await this.db.collection(col).doc(id).delete(); return; } lsSet("ds-" + col, this.ls(col).filter((x) => x.id !== id)); },
+};
+const slug = (s) => (String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "tau").slice(0, 60);
+const newId = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+async function saveVessel() {
+  const name = (st.meta.vessel || "").trim();
+  if (!name) { toast("Nhập tên tàu ở mục Chuyến hàng trước khi lưu."); $("#f-meta-vessel").focus(); return; }
+  try { await Store.put("vessels", slug(name) + "-" + st.type, { name, type: st.type, vessel: st.vessel[st.type], updated: new Date().toISOString() }); toast(`Đã lưu ${name} vào danh sách tàu.`); }
+  catch (e) { toast("Chưa lưu được: " + (e.message || e.code || "lỗi lưu trữ")); }
+}
+async function saveLog() {
+  const s = R.sum;
+  if (!isNum(s.cargo)) { toast("Chưa tính được khối lượng hàng, kiểm tra lại số liệu."); return; }
+  const iss = recordIssues();
+  const doc = { ts: new Date().toISOString(), vessel: st.meta.vessel || "(chưa đặt tên)", type: st.type, port: st.meta.port || "", cargo: st.meta.cargo || "", op: st.meta.op, date: st.meta.date || "",
+    bl: isNum(s.bl) ? s.bl : null, calcCargo: s.cargo, diff: isNum(s.diff) ? s.diff : null, pct: isNum(s.pct) ? +s.pct.toFixed(4) : null, level: s.level || null,
+    source: st.source, recordBad: iss.filter((x) => x.st === "bad").length, recordWarn: iss.filter((x) => x.st === "warn").length, recordCargo: st.rep ? N(st.rep.cargo) : null,
+    state: JSON.parse(JSON.stringify(st)) };
+  try { await Store.put("log", newId("l"), doc); toast("Đã lưu vào nhật ký."); } catch (e) { toast("Chưa lưu được: " + (e.message || e.code || "lỗi lưu trữ")); }
+}
+async function renderFleet() {
+  const box = $("#fleetList");
+  box.innerHTML = `<div class="empty">Đang tải…</div>`;
+  const list = (await Store.list("vessels")).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  if (!list.length) { box.innerHTML = `<div class="empty"><b>Chưa lưu tàu nào</b><span>Ở trang Tính mớn nước, nhập tên tàu, thông số và bảng thủy tĩnh rồi bấm "Lưu tàu này vào danh sách".</span></div>`; return; }
+  box.innerHTML = `<table class="list"><thead><tr><th>Tên</th><th>Loại</th><th>Thông số</th><th class="r">Dòng bảng tra</th><th>Cập nhật</th><th></th></tr></thead><tbody>${list.map((v) => {
+    const vv = v.vessel || {}; const rows = parseTable(vv.tableText, (TYPES[v.type] || TYPES.sea).cols).length;
+    const spec = v.type === "river" ? `Lg ${vv.lg || "?"} m` : v.type === "riverbarge" ? `Dg ${vv.Dg || "?"} m` : `LBP ${vv.lbp || "?"} m · LS ${vv.lightship || "?"} t`;
+    return `<tr><td><b>${esc(v.name)}</b></td><td>${esc((TYPES[v.type] || {}).label || v.type)}</td><td>${esc(spec)}</td><td class="r">${rows}</td><td>${v.updated ? new Date(v.updated).toLocaleDateString("vi-VN") : ""}</td>
+      <td class="r"><button class="btn sm" data-usev="${esc(v.id)}">Dùng cho phiếu</button> <button class="btn sm ghost" data-delv="${esc(v.id)}">Xóa</button></td></tr>`;
+  }).join("")}</tbody></table>`;
+  box.onclick = async (e) => {
+    const u = e.target.closest("[data-usev]"), d = e.target.closest("[data-delv]");
+    if (u) { const v = list.find((x) => x.id === u.dataset.usev); if (!v) return; st.type = v.type; st.vessel[v.type] = Object.assign(defVessel(v.type), v.vessel); st.meta.vessel = v.name; if (st.source === "example") st.source = "manual"; renderAll(); showView("calc"); toast(`Đã nạp thông số ${v.name}.`); }
+    if (d) { if (d.dataset.confirm !== "1") { d.dataset.confirm = "1"; d.textContent = "Bấm lần nữa để xóa"; setTimeout(() => { d.dataset.confirm = ""; d.textContent = "Xóa"; }, 3000); return; } await Store.del("vessels", d.dataset.delv); renderFleet(); }
+  };
+}
+let logCache = [];
+async function renderLog() {
+  const box = $("#logList");
+  box.innerHTML = `<div class="empty">Đang tải…</div>`;
+  logCache = (await Store.list("log")).sort((a, b) => String(b.ts).localeCompare(String(a.ts)));
+  const L = logCache;
+  const n = L.length, tot = L.reduce((s, x) => s + (x.calcCargo || 0), 0), totBl = L.reduce((s, x) => s + (x.bl || 0), 0);
+  const over = L.filter((x) => x.level === "bad").length, recBad = L.filter((x) => x.recordBad > 0).length;
+  $("#logKpis").innerHTML = `<div class="kpi hero"><span class="k">Tổng hàng theo mớn</span><span class="v num">${fmt(tot, 0)}<small>t</small></span><span class="s">${n} lần giám định đã lưu</span></div>
+    <div class="kpi"><span class="k">Chênh lệch cộng dồn</span><span class="v num">${totBl ? fmtS(tot - totBl, 0) : "—"}<small>t</small></span><span class="s">${totBl ? ((tot - totBl) / totBl * 100).toFixed(3) + " % so với tổng B/L" : "Chưa có B/L"}</span></div>
+    <div class="kpi"><span class="k">Vượt ngưỡng 0,5 %</span><span class="v num" style="color:var(--${over ? "bad" : "ok"})">${over}</span><span class="s">chuyến cần giám định trung gian</span></div>
+    <div class="kpi"><span class="k">Record có sai sót</span><span class="v num" style="color:var(--${recBad ? "bad" : "ok"})">${recBad}</span><span class="s">trong số đã kiểm tra bằng ảnh</span></div>`;
+  if (!n) { box.innerHTML = `<div class="empty"><b>Nhật ký trống</b><span>Sau khi tính xong hoặc kiểm tra Record, bấm "Lưu vào nhật ký" để theo dõi chênh lệch theo từng chuyến.</span></div>`; return; }
+  box.innerHTML = `<table class="list"><thead><tr><th>Ngày lưu</th><th>Tàu</th><th>Tác nghiệp</th><th class="r">Theo mớn (t)</th><th class="r">B/L (t)</th><th class="r">Chênh lệch</th><th>Kết luận</th><th>Record</th><th></th></tr></thead><tbody>${L.map((x) => `<tr>
+    <td>${new Date(x.ts).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" })}</td><td><b>${esc(x.vessel)}</b><div class="note" style="font-size:11px">${esc((TYPES[x.type] || {}).label || "")} · ${esc(x.port)}</div></td>
+    <td>${x.op === "load" ? "Xếp" : "Dỡ"} ${esc(x.cargo)}</td><td class="r num">${fmt(x.calcCargo, 3)}</td><td class="r num">${fmt(x.bl, 3)}</td>
+    <td class="r num">${isNum(x.diff) ? `${fmtS(x.diff, 1)} t<div class="note" style="font-size:11px">${x.pct > 0 ? "+" : ""}${(x.pct ?? 0).toFixed(3)} %</div>` : "—"}</td>
+    <td>${x.level ? `<span class="pill ${x.level}">${levelText(x.level)}</span>` : '<span class="pill na">—</span>'}</td>
+    <td>${x.source === "record" ? (x.recordBad ? `<span class="pill bad">${x.recordBad} chỗ sai</span>` : x.recordWarn ? `<span class="pill warn">${x.recordWarn} lệch nhỏ</span>` : '<span class="pill ok">Khớp</span>') : '<span class="note">Tự tính</span>'}</td>
+    <td class="r" style="white-space:nowrap"><button class="btn sm" data-openl="${esc(x.id)}">Mở</button> <button class="btn sm ghost" data-dell="${esc(x.id)}">Xóa</button></td></tr>`).join("")}</tbody></table>`;
+  box.onclick = async (e) => {
+    const o = e.target.closest("[data-openl]"), d = e.target.closest("[data-dell]");
+    if (o) { const x = logCache.find((y) => y.id === o.dataset.openl); if (x && x.state) { st = JSON.parse(JSON.stringify(x.state)); for (const t of Object.keys(TYPES)) st.vessel[t] = Object.assign(defVessel(t), st.vessel[t] || {}); renderAll(); showView("calc"); toast("Đã mở lại phiếu."); } }
+    if (d) { if (d.dataset.confirm !== "1") { d.dataset.confirm = "1"; d.textContent = "Bấm lần nữa để xóa"; setTimeout(() => { d.dataset.confirm = ""; d.textContent = "Xóa"; }, 3000); return; } await Store.del("log", d.dataset.dell); renderLog(); }
+  };
+}
+$("#btnCopyLog").onclick = () => copyText(["Ngày\tTàu\tTác nghiệp\tTheo mớn (t)\tB/L (t)\tChênh lệch (t)\t%\tKết luận"].concat(logCache.map((x) => [x.ts.slice(0, 10), x.vessel, x.op === "load" ? "Xếp" : "Dỡ", x.calcCargo, x.bl ?? "", x.diff ?? "", isNum(x.pct) ? x.pct.toFixed(3) : "", levelText(x.level)].join("\t"))).join("\n"));
+
+/* ================= Điều hướng & giao diện ================= */
+function showView(v) {
+  $$(".view").forEach((s) => (s.hidden = s.id !== "v-" + v));
+  $$("#nav [data-view]").forEach((b) => b.setAttribute("aria-current", b.dataset.view === v ? "page" : "false"));
+  if (v === "fleet") renderFleet();
+  if (v === "log") renderLog();
+  lsSet("ds-view", v);
+  window.scrollTo(0, 0);
+}
+const THEMES = ["system", "light", "dark"];
+function applyTheme(t) { if (t === "system") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", t); $("#themeBtn").textContent = "Giao diện: " + { system: "theo hệ thống", light: "sáng", dark: "tối" }[t]; }
+let theme = lsGet("ds-theme", "system"); applyTheme(theme);
+$("#themeBtn").onclick = () => { theme = THEMES[(THEMES.indexOf(theme) + 1) % 3]; lsSet("ds-theme", theme); applyTheme(theme); };
+
+/* ================= Kiểm tra Record bằng ảnh ================= */
+let sample = null, imgLimits = null, files = [], ctl = null;
+$("#ckType").innerHTML = Object.entries(TYPES).map(([k, t]) => `<option value="${k}">${t.label}</option>`).join("");
+$("#ckType").value = st.type;
+(async () => {
+  try {
+    if (window.claude && window.claude.use) {
+      sample = await window.claude.use("sample");
+      if (sample) { const lim = await sample.limits().catch(() => null); imgLimits = lim && lim.images ? lim.images : null; }
+    }
+  } catch { sample = null; }
+  renderCheckAvail();
+})();
+function apiMode() { return !(sample && imgLimits); }
+function renderCheckAvail() {
+  const box = $("#apiBox");
+  if (!apiMode()) { box.innerHTML = ""; $("#ckStatus").innerHTML = ""; return; }
+  const key = lsGet("ds-apikey", ""), model = lsGet("ds-model", "claude-sonnet-5-5");
+  box.innerHTML = `<div class="callout" style="display:grid;gap:10px">
+    <div><b>Kết nối Claude để đọc ảnh.</b> Trang đang chạy ngoài Claude nên cần API key của Anthropic (tạo tại console.anthropic.com). Key chỉ lưu trong trình duyệt của máy này và chỉ gửi tới máy chủ Anthropic.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:end">
+      <div class="field" style="flex:1 1 260px"><label for="apiKey">Anthropic API key</label><input id="apiKey" type="password" autocomplete="off" placeholder="sk-ant-…" value="${esc(key)}"></div>
+      <div class="field" style="flex:0 1 220px"><label for="apiModel">Mô hình</label><select id="apiModel">
+        <option value="claude-sonnet-5-5" ${model === "claude-sonnet-5-5" ? "selected" : ""}>Claude Sonnet 5.5 (nhanh, rẻ)</option>
+        <option value="claude-opus-5-5" ${model === "claude-opus-5-5" ? "selected" : ""}>Claude Opus 5.5 (đọc chữ viết tay tốt hơn)</option></select></div>
+      <button class="btn sm" type="button" id="apiSave">Lưu key</button>
+      ${key ? `<button class="btn sm ghost" type="button" id="apiForget">Xóa key</button>` : ""}
+    </div>
+    <span class="note">${key ? "Đã có key. Bấm Đọc &amp; kiểm tra Record là dùng được." : "Chưa có key: anh vẫn nhập tay số liệu Record ở trang Tính mớn nước để đối chiếu."}</span>
+  </div>`;
+  $("#apiSave").onclick = () => { lsSet("ds-apikey", $("#apiKey").value.trim()); lsSet("ds-model", $("#apiModel").value); renderCheckAvail(); toast("Đã lưu key trên máy này."); };
+  $("#apiModel").onchange = (e) => lsSet("ds-model", e.target.value);
+  const fg = $("#apiForget"); if (fg) fg.onclick = () => { lsSet("ds-apikey", ""); renderCheckAvail(); toast("Đã xóa key."); };
+}
+async function toB64(blob) {
+  let bmp = null; try { bmp = await createImageBitmap(blob); } catch {}
+  let out = blob;
+  if (bmp) {
+    const s = Math.min(1, 2000 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas"); c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    out = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.9));
+  }
+  const url = await new Promise((r, j) => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.onerror = j; fr.readAsDataURL(out); });
+  return { media: out.type || "image/jpeg", data: String(url).split(",")[1] };
+}
+function parseLoose(t) {
+  t = String(t || "").trim();
+  try { return JSON.parse(t); } catch {}
+  const f = t.match(/```(?:json)?\s*([\s\S]*?)```/); if (f) { try { return JSON.parse(f[1]); } catch {} }
+  const i = t.indexOf("{"), k = t.lastIndexOf("}");
+  if (i >= 0 && k > i) { try { return JSON.parse(t.slice(i, k + 1)); } catch {} }
+  throw { code: "invalid_json" };
+}
+async function callApi(prompt, blobs, signal) {
+  const key = lsGet("ds-apikey", ""), model = lsGet("ds-model", "claude-sonnet-5-5");
+  if (!key) throw { code: "no_key" };
+  const content = [];
+  for (const b of blobs) { const x = await toB64(b); content.push({ type: "image", source: { type: "base64", media_type: x.media, data: x.data } }); }
+  content.push({ type: "text", text: prompt + "\n\nReply with only the JSON object, no other text." });
+  let res;
+  try {
+    res = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", signal, headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+      body: JSON.stringify({ model, max_tokens: 8000, messages: [{ role: "user", content }] }) });
+  } catch (e) { throw { code: e && e.name === "AbortError" ? "cancelled" : "network" }; }
+  if (!res.ok) throw { code: res.status === 401 || res.status === 403 ? "bad_key" : res.status === 429 || res.status === 529 ? "rate_limited" : res.status === 404 ? "bad_model" : "api_error", message: await res.text().catch(() => "") };
+  const j = await res.json();
+  return parseLoose((j.content || []).filter((c) => c.type === "text").map((c) => c.text).join(""));
+}
+function addFiles(list) {
+  const max = (imgLimits && imgLimits.maxCount) || 8;
+  for (const f of list) {
+    if (!/^image\//.test(f.type)) continue;
+    if (files.length >= max) { toast(`Tối đa ${max} ảnh mỗi lần kiểm tra.`); break; }
+    files.push({ file: f, url: URL.createObjectURL(f) });
+  }
+  renderThumbs();
+}
+function renderThumbs() {
+  $("#thumbs").innerHTML = files.map((f, i) => `<div class="thumb"><img src="${f.url}" alt="Ảnh Record ${i + 1}"><button type="button" data-rm="${i}" aria-label="Bỏ ảnh ${i + 1}">✕</button><span>Ảnh ${i + 1}</span></div>`).join("");
+}
+$("#thumbs").addEventListener("click", (e) => { const b = e.target.closest("[data-rm]"); if (b) { const i = +b.dataset.rm; URL.revokeObjectURL(files[i].url); files.splice(i, 1); renderThumbs(); } });
+$("#ckFiles").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
+$("#ckCam").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
+const drop = $("#drop");
+["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", (e) => addFiles(e.dataTransfer.files));
+document.addEventListener("paste", (e) => { if ($("#v-check").hidden) return; const f = [...(e.clipboardData?.files || [])]; if (f.length) addFiles(f); });
+
+/* Ảnh lớn: tách đôi theo chiều dọc để Claude đọc rõ số hơn */
+async function prepImages() {
+  const max = (imgLimits && imgLimits.maxCount) || 6;
+  const out = [];
+  let budget = max - files.length;
+  for (const f of files) {
+    let bmp = null;
+    try { bmp = await createImageBitmap(f.file); } catch {}
+    if (bmp && budget > 0 && bmp.width * bmp.height > 2.6e6 && bmp.height >= bmp.width * 0.9) {
+      const ov = Math.round(bmp.height * 0.06), half = Math.round(bmp.height / 2);
+      for (const [y0, h] of [[0, half + ov], [half - ov, bmp.height - half + ov]]) {
+        const c = document.createElement("canvas"); c.width = bmp.width; c.height = h;
+        c.getContext("2d").drawImage(bmp, 0, y0, bmp.width, h, 0, 0, bmp.width, h);
+        out.push(await new Promise((res) => c.toBlob(res, "image/jpeg", 0.92)));
+      }
+      budget--;
+    } else out.push(f.file);
+  }
+  return out.slice(0, max);
+}
+
+function buildPrompt(type, op, note, nImgs, split) {
+  const keys = DS.calc(type, defVessel(type), defSurvey()).list.map((s) => `"${s.k}": ${s.label}${s.f ? ` [${s.f}]` : ""}`).join("\n");
+  const vk = {
+    sea: `"name","lbp","lightship","stdDens" (density of hydrostatic table, usually 1.025),"dF" (distance forward draft marks to FP, metres),"dFpos" ("aft" if marks are aft of FP, "fwd" if forward),"dA" (aft marks to AP),"dApos" ("fwd" if marks forward of AP, "aft" if aft),"dM" (midship marks to midship),"dMpos" ("A" if aft of midship, "F" if forward),"lcfRef" ("mid" if LCF measured from midship, "ap" if from AP, "fp" if from FP),"constant" (if printed)`,
+    river: `"name","lm" (Lm: distance fwd marks to fwd perpendicular),"ll" (Ll: aft marks to aft perpendicular),"lg" (Lg: length between perpendiculars),"lightship"`,
+    riverbarge: `"name","mode" ("freeboard" if freeboards were measured, "draft" if drafts were read),"Dm","Dd","Dg" (moulded depth at bow, stern, midship used to convert freeboard to draft),"lightship"`,
+  }[type === "seabarge" ? "sea" : type];
+  const ik = {
+    sea: `"fp","fs" (forward draft port/starboard as read),"ap","as" (aft port/stbd),"mp","ms" (midship port/stbd),"dens" (dock water density),"disp","tpc","lcf" (as printed, keep A/F letters or sign, e.g. "1.810 A"),"mtcP" (MTC at mean+0.5 m),"mtcM" (MTC at mean−0.5 m),"bw","fw","fo","do","lo","other" (total tonnes per category)`,
+    river: `"fp","fs","ap","as" (drafts, Trái = port, Phải = starboard),"mp","ms" (T1 = midship port, T2 = midship stbd),"dens","v" (displaced volume V from table),"vpc1","vpc2","fdn","bw","fw","fo","do","lo","other"`,
+    riverbarge: `"fp","fs","ap","as","mp","ms" (freeboards or drafts at bow/stern/midship, port & starboard),"dens","v" (displaced volume from table),"bw","fw","fo","do","lo","other"`,
+  }[type === "seabarge" ? "sea" : type];
+  return `You are checking a DRAFT SURVEY RECORD for a ${TYPES[type].label} (${type}). The ${nImgs} attached photo(s) are pages of the record${split ? "; some photos were cut into top and bottom halves with a few overlapping rows, so do not double count" : ""}. The record may be in Vietnamese or English, printed or handwritten.
+
+Read every number EXACTLY as written on the record. Do NOT compute, correct, round or fill in anything: use null for a value that is not on the record or not legible, and mention unclear digits in "notes" (in Vietnamese). Units: metres for drafts and distances, tonnes for weights. Use a decimal point (12.090, not 12,090 and not 12.090,0). Keep printed signs (trim -0.016, correction -0.882).
+Records usually have an INITIAL column/page (lần đầu, before loading/discharging) and a FINAL column/page (lần cuối, after). Put each in its own object; use null for a survey that is not in the photos.
+Operation hint from the user: ${op === "load" ? "loading (initial = light, final = loaded)" : "discharging (initial = loaded, final = light)"}.${note ? `\nUser note: ${note}` : ""}
+
+Return ONLY one JSON object with this shape:
+{
+ "vessel": { ${vk} },
+ "meta": { "vesselName", "port", "cargo", "op" ("load"|"discharge"), "blQty" (B/L or ship's figure in tonnes, if printed), "date", "cert" (certificate / W.O.E number) },
+ "initial": { "inputs": { ${ik} }, "reported": { ...step values printed on the record, keys below... } },
+ "final": { same shape },
+ "reportedCargo": number (cargo quantity by draft survey printed on the record) or null,
+ "notes": [ short Vietnamese notes about unreadable or doubtful values ]
+}
+Keys for "reported" (fill only the ones actually printed; the bracket shows the usual formula so you can recognise the line):
+${keys}`;
+}
+
+$("#btnRun").onclick = runCheck;
+$("#btnStop").onclick = () => ctl && ctl.abort();
+async function runCheck() {
+  if (apiMode() && !lsGet("ds-apikey", "")) { renderCheckAvail(); toast("Nhập API key trước khi đọc ảnh."); $("#apiKey") && $("#apiKey").focus(); return; }
+  if (!files.length) { toast("Chọn ít nhất một ảnh Record."); return; }
+  const type = $("#ckType").value, op = $("#ckOp").value, note = $("#ckNote").value.trim();
+  ctl = new AbortController();
+  $("#btnRun").disabled = true; $("#btnStop").hidden = false;
+  const t0 = Date.now();
+  let phase = "Đang chuẩn bị ảnh…";
+  const tick = () => { $("#ckStatus").innerHTML = `<div class="status"><span class="spin"></span><span>${phase} <span class="note">${Math.round((Date.now() - t0) / 1000)} giây</span></span></div>`; };
+  tick(); const timer = setInterval(tick, 1000);
+  try {
+    const imgs = await prepImages();
+    phase = "Claude đang đọc từng con số trên Record… (thường 30–90 giây)";
+    const prompt = buildPrompt(type, op, note, imgs.length, imgs.length > files.length);
+    const j = apiMode() ? await callApi(prompt, imgs, ctl.signal) : await sample.json(prompt, { images: imgs, modelTier: "complex", signal: ctl.signal, onText: () => { phase = "Đang trích xuất số liệu…"; } });
+    if (!j || typeof j !== "object") throw { code: "invalid_json" };
+    await applyRecord(j, type, op);
+    phase = "";
+    $("#ckStatus").innerHTML = "";
+    renderCheckResult();
+  } catch (e) {
+    const c = e && e.code;
+    const msg = {
+      cancelled: "Đã dừng.", not_granted: "Trang chưa được phép dùng Claude. Mở lại trang và chọn Cho phép khi được hỏi.", sampling_disabled: "Tài khoản này chưa dùng được Claude cho trang công cụ.",
+      images_unavailable: "Chế độ xem hiện tại không gửi được ảnh cho Claude.", image_rejected: "Có ảnh không đọc được (sai định dạng hoặc quá lớn). Chụp lại dạng JPG/PNG.",
+      rate_limited: "Đã gọi Claude quá nhiều hoặc hết hạn mức. Đợi một lúc rồi bấm lại.", invalid_json: "Claude chưa trả về số liệu đúng dạng. Bấm kiểm tra lại, hoặc chụp ảnh rõ hơn.",
+      refused: "Claude không xử lý được ảnh này. Thử ảnh khác.", session_expired: "Phiên đăng nhập hết hạn, đăng nhập lại Claude.", prompt_too_large: "Quá nhiều dữ liệu một lần, bớt số ảnh.",
+      no_key: "Chưa có API key.", bad_key: "API key không hợp lệ hoặc đã bị thu hồi. Kiểm tra lại key.", bad_model: "Tài khoản API chưa dùng được mô hình này, chọn mô hình khác.",
+      network: "Không kết nối được máy chủ Anthropic. Kiểm tra mạng hoặc tường lửa công ty.", api_error: "Máy chủ Anthropic báo lỗi. Thử lại sau ít phút.",
+    }[c] || "Kết nối gián đoạn khi đọc ảnh. Bấm kiểm tra lại.";
+    $("#ckStatus").innerHTML = `<div class="callout ${c === "cancelled" ? "" : "warn"}"><div>${esc(msg)}</div></div>`;
+  } finally {
+    clearInterval(timer); $("#btnRun").disabled = false; $("#btnStop").hidden = true; ctl = null;
+  }
+}
+const SURVEY_KEYS = ["fp", "fs", "ap", "as", "mp", "ms", "dens"];
+const LIQ_KEYS = { bw: "BW", fw: "FW", fo: "FO", do: "DO", lo: "LO", other: "OT" };
+async function applyRecord(j, type, op) {
+  const ns = blankState();
+  ns.type = type; ns.source = "record";
+  const ai = [];
+  const vIn = j.vessel || {};
+  const name = (j.meta && j.meta.vesselName) || vIn.name || "";
+  let V = Object.assign(defVessel(type), {});
+  const saved = (await Store.list("vessels")).find((x) => x.type === type && slug(x.name) === slug(name));
+  if (saved) V = Object.assign(V, saved.vessel);
+  for (const k of Object.keys(defVessel(type))) {
+    if (k === "tableText" || k === "gridText" || k === "noMid") continue;
+    const val = vIn[k];
+    if (val != null && val !== "") { V[k] = String(val); if (!OPTS[k]) ai.push("V." + k); }
+  }
+  if ((type === "sea" || type === "seabarge") && !vIn.lcfRef && !saved) V.lcfRef = type === "seabarge" ? "ap" : "mid";
+  ns.vessel[type] = V;
+  const m = j.meta || {};
+  ns.meta = { vessel: name, port: m.port || "", cargo: m.cargo || "Than", op: m.op === "load" || m.op === "discharge" ? m.op : op, bl: m.blQty != null ? String(m.blQty) : ($("#ckBl").value || ""), date: "", cert: m.cert || "" };
+  if ($("#ckBl").value.trim()) ns.meta.bl = $("#ckBl").value.trim();
+  ns.rep = { initial: null, final: null, cargo: j.reportedCargo ?? null };
+  for (const w of ["initial", "final"]) {
+    const x = j[w];
+    if (!x) continue;
+    const inp = x.inputs || {};
+    const s = defSurvey();
+    for (const k of SURVEY_KEYS) if (inp[k] != null && inp[k] !== "") { s[k] = String(inp[k]); ai.push(`sv.${w}.${k}`); }
+    for (const [hk] of HFIELDS[type]) if (inp[hk] != null && inp[hk] !== "") { s.h[hk] = String(inp[hk]); ai.push(`sv.${w}.h.${hk}`); }
+    let i = 0;
+    for (const [lk, lt] of Object.entries(LIQ_KEYS)) {
+      const v = N(inp[lk]);
+      if (isNum(v) && v !== 0) { s.liquids.push({ type: lt, name: "Theo Record", vol: "", dens: "", mass: String(v) }); ai.push(`sv.${w}.liquids.${i}.mass`); i++; }
+    }
+    const rep = Object.assign({}, x.reported || {});
+    if (rep.lcf != null) rep.lcf = DS.lcfAft(rep.lcf, V);
+    if ((rep.FM == null) && rep.qm != null) rep.FM = rep.qm;
+    ns.sv[w] = s;
+    ns.rep[w] = rep;
+  }
+  ns.notes = Array.isArray(j.notes) ? j.notes.slice(0, 8).map(String) : [];
+  ns.aiFields = ai;
+  ns.savedProfile = saved ? saved.name : null;
+  st = ns;
+  renderAll();
+}
+function renderCheckResult() {
+  const iss = recordIssues();
+  const bad = iss.filter((x) => x.st === "bad"), warn = iss.filter((x) => x.st === "warn");
+  const s = R.sum;
+  const lv = bad.length ? "bad" : warn.length ? "warn" : "ok";
+  const root = iss.find((x) => x.root);
+  const head = lv === "ok" ? "Các bước tính trên Record khớp với tính lại" : lv === "warn" ? `Record lệch nhỏ ở ${warn.length} chỗ` : `Record có ${bad.length} chỗ tính sai`;
+  const desc = lv === "ok" ? "Với số liệu đọc được, công thức và phép tính trên Record đúng. Vẫn cần dò lại mớn đọc và số đo két với hiện trường." : root ? `Sai bắt đầu từ bước "${root.label}" ở ${root.where.toLowerCase()}; các bước sau lệch theo. Dò lại con số này trên ảnh trước khi kết luận.` : "Xem danh sách bên dưới, đối chiếu với ảnh gốc.";
+  const s0 = R.I.map, s1 = R.F.map;
+  const dr = (S) => ["fp", "fs", "mp", "ms", "ap", "as"].map((k) => esc(S[k] || "—")).join(" / ");
+  const ckLv = s.level || "na";
+  $("#ckResult").innerHTML = `
+  <div class="card reveal" style="display:grid;gap:16px">
+    <h2>Kết quả kiểm tra ${esc(st.meta.vessel || "")}</h2>
+    <div class="grid2" style="gap:14px">
+      <div class="verdict ${lv}"><div class="ic">${lv === "ok" ? "✓" : "!"}</div><div><b>${head}</b><p>${esc(desc)}</p></div></div>
+      <div class="verdict ${ckLv}"><div class="ic">${ckLv === "ok" ? "✓" : ckLv === "na" ? "…" : "!"}</div><div><b>Hàng theo mớn ${fmt(s.cargo, 3)} t${isNum(s.pct) ? ` · ${s.pct > 0 ? "+" : ""}${s.pct.toFixed(3)} % so với B/L` : ""}</b><p>${ckLv === "na" ? "Chưa có khối lượng B/L để so. Nhập B/L ở ô phía trên hoặc ở trang Tính mớn nước." : ckLv === "ok" ? "Trong ngưỡng 0,3 %." : ckLv === "warn" ? "Trong khoảng 0,3–0,5 %: kiểm tra kỹ và ghi lý do." : "Vượt 0,5 %: cần giám định trung gian."}${isNum(N(st.rep && st.rep.cargo)) ? ` Record ghi ${fmt(N(st.rep.cargo), 3)} t.` : ""}</p></div></div>
+    </div>
+    ${iss.length ? `<div style="display:grid;gap:8px"><div class="sub-h">Các chỗ lệch</div><ul class="issue-list">${iss.map((x) => `<li><span class="pill ${x.st}">${x.st === "bad" ? "Sai" : "Lệch nhỏ"}</span><span><b>${esc(x.label)}</b> <span class="note">· ${esc(x.where)}${x.note ? " · " + esc(x.note) : ""}${x.root ? " · điểm sai gốc" : ""}</span></span><span class="vals">${x.table ? "Record" : "Record"} <b>${fmt(x.rv, x.dp)}</b><br>${x.table ? "Bảng" : "Tính lại"} <b>${fmt(x.cv, x.dp)}</b></span></li>`).join("")}</ul></div>` : ""}
+    <div style="display:grid;gap:8px"><div class="sub-h">Số liệu Claude đọc được (dò lại với ảnh)</div>
+      <div class="tbl-wrap"><table class="list" style="min-width:560px"><thead><tr><th></th><th>Mớn mũi P/S · giữa P/S · lái P/S (m)</th><th class="r">Tỷ trọng</th><th class="r">Final mean</th><th class="r">Net (t)</th></tr></thead><tbody>
+        <tr><td><b>Lần đầu</b></td><td class="num">${dr(st.sv.initial)}</td><td class="r num">${esc(st.sv.initial.dens || "—")}</td><td class="r num">${fmt(s0.FM, 4)}</td><td class="r num">${fmt(s.nI, 3)}</td></tr>
+        <tr><td><b>Lần cuối</b></td><td class="num">${dr(st.sv.final)}</td><td class="r num">${esc(st.sv.final.dens || "—")}</td><td class="r num">${fmt(s1.FM, 4)}</td><td class="r num">${fmt(s.nF, 3)}</td></tr>
+      </tbody></table></div>
+      ${st.savedProfile ? `<p class="note">Đã nạp bảng thủy tĩnh của "${esc(st.savedProfile)}" từ danh sách tàu để đối chiếu số tra.</p>` : `<p class="note">Chưa có bảng thủy tĩnh của tàu này trong danh sách, nên số tra Displacement, TPC, LCF, MTC lấy theo Record. Lưu tàu kèm bảng để lần sau đối chiếu được cả số tra.</p>`}
+      ${st.notes && st.notes.length ? `<div class="callout warn"><div><b>Claude lưu ý khi đọc:</b><br>${st.notes.map(esc).join("<br>")}</div></div>` : ""}
+    </div>
+    <div class="actions"><button class="btn primary" type="button" id="ckOpen">Xem bảng tính từng bước và sửa số đọc sai</button><button class="btn green" type="button" id="ckSave">Lưu vào nhật ký</button><button class="btn" type="button" id="ckCopy">Sao chép kết luận</button></div>
+  </div>`;
+  $("#ckOpen").onclick = () => showView("calc");
+  $("#ckSave").onclick = () => saveLog();
+  $("#ckCopy").onclick = () => copyText(resultText());
+}
+
+/* ================= Khởi động ================= */
+renderAll();
+showView(lsGet("ds-view", "calc"));
+Store.init();
+})();
+
+</script>
+
+</body>
+</html>
